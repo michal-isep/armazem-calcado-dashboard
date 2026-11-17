@@ -7,7 +7,7 @@ Stack: Next.js (frontend), NestJS (backend), PostgreSQL. Spec-driven development
 ## Team
 | Person | GitHub | Role |
 |---|---|---|
-| Lead | michal-isep | Owns repo, merges pull requests, runs Claude Code sessions |
+| Lead (Michal Olaf Binek) | Olaff18 | Owns repo, merges pull requests, runs Claude Code sessions |
 | Federico | fedefrap | Reviewer / validator of calculations |
 | Leo | leomancio23 | Docs and spec writing, test cases |
 | Paola | (pending) | Docs and spec writing, manual testing |
