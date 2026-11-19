@@ -53,7 +53,7 @@ describe.skipIf(!url)('Filters (fixture)', () => {
       .overrideProvider(DatabaseService)
       .useValue({
         query: async (text: string, params: unknown[] = []) =>
-          (await pool.query(text, params)).rows,
+          pool.query(text, params),
       })
       .compile();
     app = moduleRef.createNestApplication();

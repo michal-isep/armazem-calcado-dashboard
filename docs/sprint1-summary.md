@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #5).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #10).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -75,3 +75,26 @@ The owner is written in each issue body, so these changes only count once the bo
 - Federico: #8, #9, #10, #14 (API) and #17 (Overview page). #5 is done.
 - Paola takes #22 (validate indicators independently) because it needs only the CSVs and a spreadsheet or script, not the repo, and it is more independent when written by someone who did not build the API. She also drafts the #23 test plan now from `docs/spec.md` and runs it once #17-#20 exist, and takes #24 from Leo (Leo has #6, #11, #15, #19, #20, #21, #24, #25). Paola still needs a GitHub account; until then Federico posts her results in the issues.
 - Leo keeps #6, #11, #15, #19, #20, #21, #25.
+
+## M2 and X1 API (issue #8, Federico)
+- `GET /indicators/order-size` returns M2 (`m2AverageOrderSize` = units / distinct orders) and X1 (`x1LinesPerOrder` = lines / distinct orders) from `customer_order_line`, with `orders`, `lines`, `units`, `source: "Customer_Order"` and the filters applied. Both are `null` when no order matches. Code in `apps/api/src/indicators/`.
+- Filters supported now: `from`, `to` (YYYY-MM-DD, end date inclusive), `reference`, `excludeDuplicates=true|false`. Quantity-0 lines are always excluded. Bad input gives 400. `filters.ts` (`parseOrderFilters`, `orderFilterSql`) is meant to be reused by the other indicator endpoints; issue #13 can extend it.
+- Not done: the ABC class filter, because it needs the computed ABC from M1 (#7). Customer and operator filters are not added.
+- Tests: `filters.spec.ts` (unit) and `test/order-size.e2e-spec.ts` (spec section 8 fixture; needs `TEST_DATABASE_URL`, it recreates `customer_order_line`). Ran the e2e on a throwaway Postgres with trust auth on port 5588, then removed it.
+- Next for Federico: #9, #10, #14, #17.
+
+## M3 and X2 API (issue #9, Federico)
+- `GET /indicators/wave-split` returns M3 (`m3AverageOrdersPerWave` = distinct (wave, order) pairs / distinct waves) and X2 (`x2SplitOrdersPercent` = orders in more than one wave / orders, as a percentage 0-100), with `orders`, `waves`, `lines`, `waveOrderPairs`, `splitOrders`, `source: "Customer_Order"` and the filters applied. Both are `null` when no order matches. Code: `apps/api/src/indicators/wave-split.service.ts`, same filters as #8 (`parseOrderFilters`, `orderFilterSql`). The ABC class filter is still missing (needs #7).
+- Tests: `wave-split.service.spec.ts` (unit, mocked database) and `test/wave-split.e2e-spec.ts` (spec section 8 fixture gives M3 = 1.5, X2 = 0; a February order split over two waves tests X2). Ran the e2e on a throwaway Postgres with trust auth on port 5599, then removed it.
+- The e2e files recreate the same tables, so `vitest.config.e2e.ts` now sets `fileParallelism: false`; before this, running all e2e files at once could make them overwrite each other's fixture.
+- Paola is listed as co-author of the commits in the issue body; the commit has no co-author trailer because her git email is unknown. Add it if she wants it.
+- Next for Federico: #10, #14, #17.
+
+## M4 and M5 API (issue #10, Federico)
+- `GET /indicators/sector` returns M4 (`m4SectorShare`: per sector `units`, `lines`, `orders`, `sharePercent` = units / total units, 0-100) and M5 (`m5MultiSectorOrdersPercent` = orders with more than one distinct sector / orders, 0-100), with `orders`, `lines`, `units`, `multiSectorOrders`, `source: "Product + Customer_Order"` and the filters applied. `m5MultiSectorOrdersPercent` is `null` and `m4SectorShare` is `[]` when no order matches. Code: `apps/api/src/indicators/sector.service.ts`, same filters as #8/#9.
+- `notInformative` is `true` when at most one sector is present (today: every product is PF, so M4 = 100% and M5 = 0%), so the UI can show the badge (ADR 0006). No substitute for M5 is offered (ADR 0005); aisle is never called sector.
+- `orderFilterSql` uses unqualified columns and `reference` exists in both `customer_order_line` and `product`, so the filters are applied to `customer_order_line` in a CTE before the join with `product`. `filters.ts` is unchanged. Inner join is safe: every ordered reference exists in Product (data profile).
+- Tests: `sector.service.spec.ts` (unit, mocked database) and `test/sector.e2e-spec.ts` (spec section 8 fixture with fictional sectors S1 and S2: M4 = 40/60, M5 = 33.3%; single-sector case 100%/0%; empty result; duplicates toggle). Ran the e2e on a throwaway Postgres with trust auth on port 5611, then removed it.
+- The ABC class filter is still missing (needs #7).
+- `gh project item-list 3` failed in this session: the token lacks the `read:project` scope (`gh auth refresh -s read:project`), so the sprint1 board was not read.
+- Next for Federico: #14, #17.

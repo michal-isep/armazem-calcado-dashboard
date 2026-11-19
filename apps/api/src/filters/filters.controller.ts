@@ -19,7 +19,7 @@ export class FiltersController {
   @Get('options')
   async options(): Promise<FilterOptions> {
     const col = async (sql: string) =>
-      (await this.database.query<{ v: string }>(sql)).map((r) => r.v);
+      (await this.database.query<{ v: string }>(sql)).rows.map((r) => r.v);
 
     const [period, references, customers, operators, aisles] =
       await Promise.all([
@@ -44,7 +44,7 @@ export class FiltersController {
         ),
       ]);
 
-    const p = period[0];
+    const p = period.rows[0];
     return {
       period: p?.from && p.to ? { from: p.from, to: p.to } : null,
       abcClasses: ['A', 'B', 'C'],
