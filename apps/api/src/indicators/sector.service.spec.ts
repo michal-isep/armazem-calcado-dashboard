@@ -1,10 +1,18 @@
 import { DatabaseService } from '../database.service.js';
-import { parseOrderFilters } from './filters.js';
+import { AbcService } from '../abc/abc.service.js';
+import { parseFilters } from '../filters/filters.js';
+const abc = {
+  referencesInClass: async () => undefined,
+} as unknown as AbcService;
+const defaults = { basis: 'lines' as const, thresholds: { a: 80, b: 95 } };
 import { SectorService } from './sector.service.js';
 
 function serviceReturning(row: Record<string, unknown>) {
   const query = vi.fn().mockResolvedValue({ rows: [row] });
-  const service = new SectorService({ query } as unknown as DatabaseService);
+  const service = new SectorService(
+    { query } as unknown as DatabaseService,
+    abc,
+  );
   return { service, query };
 }
 
@@ -20,7 +28,7 @@ describe('SectorService', () => {
         { sector: 'S2', units: 6, lines: 2, orders: 2 },
       ],
     });
-    const result = await service.compute(parseOrderFilters({}));
+    const result = await service.compute(parseFilters({}), defaults);
     expect(result).toMatchObject({
       source: 'Product + Customer_Order',
       orders: 3,
@@ -46,7 +54,7 @@ describe('SectorService', () => {
       multi_sector_orders: 0,
       sectors: [{ sector: 'PF', units: 7, lines: 3, orders: 2 }],
     });
-    const result = await service.compute(parseOrderFilters({}));
+    const result = await service.compute(parseFilters({}), defaults);
     expect(result.m4SectorShare).toEqual([
       { sector: 'PF', units: 7, lines: 3, orders: 2, sharePercent: 100 },
     ]);
@@ -62,7 +70,7 @@ describe('SectorService', () => {
       multi_sector_orders: 0,
       sectors: [],
     });
-    const result = await service.compute(parseOrderFilters({}));
+    const result = await service.compute(parseFilters({}), defaults);
     expect(result.m4SectorShare).toEqual([]);
     expect(result.m5MultiSectorOrdersPercent).toBeNull();
   });
@@ -76,7 +84,8 @@ describe('SectorService', () => {
       sectors: [],
     });
     await service.compute(
-      parseOrderFilters({ from: '2023-01-05', reference: 'A' }),
+      parseFilters({ from: '2023-01-05', reference: 'A' }),
+      defaults,
     );
     expect(query.mock.calls[0][1]).toEqual(['2023-01-05', 'A']);
   });

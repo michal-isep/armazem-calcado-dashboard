@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #7).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #46).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -133,3 +133,11 @@ The owner is written in each issue body, so these changes only count once the bo
 - Response: `basis`, `thresholds`, `filters`, `ranked` (references, lines, units behind the ranking), `classes` (per class over the selected references), `references` (rank, class, lines, units, `sharePercent`, `cumulativeBeforePercent`; from the full ranking). Empty range gives empty lists, no error.
 - Tests: `abc.spec.ts` (unit: spec fixture 1 on both bases, fixture 2, thresholds, params) and `test/abc.e2e-spec.ts` (fixture 2 through the API: scoping test reference = T stays C, customer/operator scoping, abcClass = A gives P, Q, R, date-range-only, units basis, 400s). Throwaway Postgres 17 container (`abc7-pg`, trust auth, port 5640), stopped. All 8 e2e files pass together. Real data via the API: lines 49/53/106, units 51/49/108, as in the decisions above.
 - Next: per CLAUDE.md rule 6, add the ABC class filter to `apps/api/src/indicators/filters.ts` and the #8, #9, #10, #14 endpoints (or move them to `src/filters/`, see the duplicate-code note under #13). Then #12 (X4), #18 (Products page), #17 (Overview).
+
+## Indicators on shared filters and the ABC class filter (issue #46, Michal)
+- #8, #9, #10 and #14 now use `src/filters/` (`@QueryFilters()`, `buildWhere`, `describeFilters`); `src/indicators/filters.ts` and its spec are removed, so the duplicate filter code noted under #13 is gone. Their `filters` response field is now the `describeFilters` report (what `CardFilters` in the web already expected); other fields are unchanged.
+- `abcClass` works on order-size, wave-split, sector and monthly-trend. `AbcService.referencesInClass(filters, abcParams)` ranks on the date range only (ADR 0002) and `buildWhere(..., { abcReferences })` adds `reference = ANY(...)`. The endpoints also read `basis`, `thresholdA`, `thresholdB` (`@QueryAbcParams()`, same defaults as M1, 400 on bad input) so a class means the same as on the Products page. In monthly-trend the class is computed once on the selected range and reused for the months and the comparison period.
+- Customer, operator and aisle on these endpoints behave as in #13 (customer/operator applied, aisle reported as not applied).
+- Tests: unit specs updated; new `test/indicators-abc-filter.e2e-spec.ts` (fixture 2 through all four endpoints, scoping with reference, basis/thresholds, 400s). All 9 e2e files pass on a throwaway Postgres 17 (`abc46-pg`, port 5641, stopped). Real data: order-size by class A/B/C gives 98,380 / 17,911 / 6,046 lines, summing to 122,337.
+- CLAUDE.md rule 6 is now done and can be removed.
+- Next: #12 (X4), #18 (Products page), #17 (Overview, Federico).

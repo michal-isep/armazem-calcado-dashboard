@@ -23,6 +23,11 @@ export interface AbcClassSummary {
   sharePercent: number;
 }
 
+export interface AbcParams {
+  basis: AbcBasis;
+  thresholds: AbcThresholds;
+}
+
 export interface AbcResult {
   source: 'Customer_Order';
   basis: AbcBasis;
@@ -44,12 +49,15 @@ export interface AbcResult {
 export class AbcService {
   constructor(private readonly database: DatabaseService) {}
 
-  async compute(
+  /**
+   * The ranking on the date range only (plus validity and the duplicates
+   * toggle): product, class, customer, operator and aisle never change it
+   * (ADR 0002).
+   */
+  async rank(
     filters: Filters,
-    basis: AbcBasis,
-    thresholds: AbcThresholds,
-  ): Promise<AbcResult> {
-    // ABC sees the date range only; the other filters select afterwards.
+    { basis, thresholds }: AbcParams,
+  ): Promise<AbcRow[]> {
     const base = buildWhere(filters, 'customer_order', { scope: 'dateOnly' });
     const { rows } = await this.database.query<{
       reference: string;
@@ -61,7 +69,27 @@ export class AbcService {
         GROUP BY reference`,
       base.params,
     );
-    const ranking = classify(rows, basis, thresholds);
+    return classify(rows, basis, thresholds);
+  }
+
+  /**
+   * References of the selected ABC class, for the indicators that select
+   * order lines by class; undefined when no class is selected.
+   */
+  async referencesInClass(
+    filters: Filters,
+    abc: AbcParams,
+  ): Promise<string[] | undefined> {
+    if (!filters.abcClass) return undefined;
+    const ranking = await this.rank(filters, abc);
+    return ranking
+      .filter((r) => r.abcClass === filters.abcClass)
+      .map((r) => r.reference);
+  }
+
+  async compute(filters: Filters, abc: AbcParams): Promise<AbcResult> {
+    const { basis, thresholds } = abc;
+    const ranking = await this.rank(filters, abc);
 
     let selected = ranking;
     if (filters.reference || filters.customer || filters.operator) {

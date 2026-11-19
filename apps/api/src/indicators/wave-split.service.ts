@@ -1,10 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
-import { OrderFilters, orderFilterSql } from './filters.js';
+import { AbcService, type AbcParams } from '../abc/abc.service.js';
+import {
+  buildWhere,
+  describeFilters,
+  type FilterReport,
+  type Filters,
+} from '../filters/filters.js';
 
 export interface WaveSplitIndicators {
   source: 'Customer_Order';
-  filters: OrderFilters;
+  filters: FilterReport;
   orders: number;
   waves: number;
   lines: number;
@@ -20,10 +26,19 @@ export interface WaveSplitIndicators {
 
 @Injectable()
 export class WaveSplitService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly abc: AbcService,
+  ) {}
 
-  async compute(filters: OrderFilters): Promise<WaveSplitIndicators> {
-    const { where, params } = orderFilterSql(filters);
+  async compute(
+    filters: Filters,
+    abcParams: AbcParams,
+  ): Promise<WaveSplitIndicators> {
+    const abcReferences = await this.abc.referencesInClass(filters, abcParams);
+    const { sql, params } = buildWhere(filters, 'customer_order', {
+      abcReferences,
+    });
     const { rows } = await this.database.query<{
       orders: number;
       waves: number;
@@ -34,7 +49,7 @@ export class WaveSplitService {
       `WITH filtered AS (
          SELECT order_number, wave_number
            FROM customer_order_line
-          WHERE ${where}),
+          ${sql}),
        per_order AS (
          SELECT order_number, count(DISTINCT wave_number) AS order_waves
            FROM filtered
@@ -49,7 +64,7 @@ export class WaveSplitService {
     const { orders, waves, lines, pairs, split_orders: splitOrders } = rows[0];
     return {
       source: 'Customer_Order',
-      filters,
+      filters: describeFilters(filters, 'customer_order'),
       orders,
       waves,
       lines,

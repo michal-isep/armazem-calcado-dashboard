@@ -1,10 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
-import { OrderFilters, orderFilterSql } from './filters.js';
+import { AbcService, type AbcParams } from '../abc/abc.service.js';
+import {
+  buildWhere,
+  describeFilters,
+  type FilterReport,
+  type Filters,
+} from '../filters/filters.js';
 
 export interface OrderSizeIndicators {
   source: 'Customer_Order';
-  filters: OrderFilters;
+  filters: FilterReport;
   orders: number;
   lines: number;
   units: number;
@@ -16,10 +22,19 @@ export interface OrderSizeIndicators {
 
 @Injectable()
 export class OrderSizeService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly abc: AbcService,
+  ) {}
 
-  async compute(filters: OrderFilters): Promise<OrderSizeIndicators> {
-    const { where, params } = orderFilterSql(filters);
+  async compute(
+    filters: Filters,
+    abcParams: AbcParams,
+  ): Promise<OrderSizeIndicators> {
+    const abcReferences = await this.abc.referencesInClass(filters, abcParams);
+    const { sql, params } = buildWhere(filters, 'customer_order', {
+      abcReferences,
+    });
     const { rows } = await this.database.query<{
       orders: number;
       lines: number;
@@ -29,13 +44,13 @@ export class OrderSizeService {
               count(*)::int AS lines,
               coalesce(sum(quantity), 0)::int AS units
          FROM customer_order_line
-        WHERE ${where}`,
+       ${sql}`,
       params,
     );
     const { orders, lines, units } = rows[0];
     return {
       source: 'Customer_Order',
-      filters,
+      filters: describeFilters(filters, 'customer_order'),
       orders,
       lines,
       units,

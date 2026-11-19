@@ -1,5 +1,10 @@
 import { DatabaseService } from '../database.service.js';
-import { parseOrderFilters } from './filters.js';
+import { AbcService } from '../abc/abc.service.js';
+import { parseFilters } from '../filters/filters.js';
+const abc = {
+  referencesInClass: async () => undefined,
+} as unknown as AbcService;
+const defaults = { basis: 'lines' as const, thresholds: { a: 80, b: 95 } };
 import { MonthlyTrendService } from './monthly-trend.service.js';
 
 const row = (period: string, orders: number, units: number) => ({
@@ -26,16 +31,19 @@ function serviceWith(options: {
     }
     return { rows: options.whole ?? [] };
   });
-  const service = new MonthlyTrendService({
-    query,
-  } as unknown as DatabaseService);
+  const service = new MonthlyTrendService(
+    {
+      query,
+    } as unknown as DatabaseService,
+    abc,
+  );
   return { service, query };
 }
 
 describe('MonthlyTrendService', () => {
   it('returns empty results when there are no orders', async () => {
     const { service } = serviceWith({ range: { first: null, last: null } });
-    const result = await service.compute(parseOrderFilters({}));
+    const result = await service.compute(parseFilters({}), defaults);
     expect(result).toMatchObject({
       dataRange: null,
       months: [],
@@ -51,7 +59,7 @@ describe('MonthlyTrendService', () => {
       monthly: [row('2023-01', 2, 10), row('2023-03', 4, 8)],
       whole: [row('all', 6, 18)],
     });
-    const result = await service.compute(parseOrderFilters({}));
+    const result = await service.compute(parseFilters({}), defaults);
     expect(result.months.map((m) => [m.month, m.partial])).toEqual([
       ['2023-01', true],
       ['2023-02', false],
@@ -77,7 +85,8 @@ describe('MonthlyTrendService', () => {
       whole: [row('all', 1, 1)],
     });
     const result = await service.compute(
-      parseOrderFilters({ from: '2023-01-10', to: '2023-01-20' }),
+      parseFilters({ from: '2023-01-10', to: '2023-01-20' }),
+      defaults,
     );
     // 11 days: the previous period is 2022-12-30 to 2023-01-09.
     expect(result.comparison).toEqual({
@@ -97,7 +106,8 @@ describe('MonthlyTrendService', () => {
       whole: [row('all', 2, 6)],
     });
     const result = await service.compute(
-      parseOrderFilters({ from: '2023-03-01', to: '2023-03-31' }),
+      parseFilters({ from: '2023-03-01', to: '2023-03-31' }),
+      defaults,
     );
     // 31 days: the previous period is 2023-01-29 to 2023-02-28.
     expect(result.comparison).toMatchObject({

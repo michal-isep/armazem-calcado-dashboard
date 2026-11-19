@@ -97,6 +97,11 @@ export interface WhereOptions {
    * operator and aisle filters (ADR 0002).
    */
   scope?: 'all' | 'dateOnly';
+  /**
+   * References in the selected ABC class, from the ranking on the date range
+   * only (ADR 0002). Order lines only; added to the clause as a selection.
+   */
+  abcReferences?: string[];
 }
 
 /**
@@ -108,8 +113,8 @@ export interface WhereOptions {
  * - Picks have no date, customer or order. The date range selects picks whose
  *   wave started in the range, where a wave starts at its earliest valid order
  *   line. Customer is not applied to picks (see `describeFilters`).
- * - `abcClass` is never part of the clause: it selects from the computed
- *   classes, which the indicator does after computing ABC (ADR 0002).
+ * - `abcClass` is never read here: the caller ranks first and passes the
+ *   references of the class as `options.abcReferences` (ADR 0002).
  */
 export function buildWhere(
   filters: Filters,
@@ -133,6 +138,9 @@ export function buildWhere(
       if (filters.reference) add('reference = ?', filters.reference);
       if (filters.customer) add('customer = ?', filters.customer);
       if (filters.operator) add('operator = ?', filters.operator);
+      if (options.abcReferences) {
+        add('reference = ANY(?::text[])', options.abcReferences);
+      }
     }
   } else {
     if (filters.from || filters.to) {

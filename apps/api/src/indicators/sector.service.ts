@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
-import { OrderFilters, orderFilterSql } from './filters.js';
+import { AbcService, type AbcParams } from '../abc/abc.service.js';
+import {
+  buildWhere,
+  describeFilters,
+  type FilterReport,
+  type Filters,
+} from '../filters/filters.js';
 
 export interface SectorShare {
   sector: string;
@@ -13,7 +19,7 @@ export interface SectorShare {
 
 export interface SectorIndicators {
   source: 'Product + Customer_Order';
-  filters: OrderFilters;
+  filters: FilterReport;
   orders: number;
   lines: number;
   units: number;
@@ -31,13 +37,22 @@ export interface SectorIndicators {
 
 @Injectable()
 export class SectorService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly abc: AbcService,
+  ) {}
 
-  async compute(filters: OrderFilters): Promise<SectorIndicators> {
+  async compute(
+    filters: Filters,
+    abcParams: AbcParams,
+  ): Promise<SectorIndicators> {
     // The filters are applied to customer_order_line alone, before the join:
     // orderFilterSql uses unqualified column names and `reference` exists in
     // both tables, so filtering after the join would be ambiguous.
-    const { where, params } = orderFilterSql(filters);
+    const abcReferences = await this.abc.referencesInClass(filters, abcParams);
+    const { sql, params } = buildWhere(filters, 'customer_order', {
+      abcReferences,
+    });
     const { rows } = await this.database.query<{
       orders: number;
       lines: number;
@@ -53,7 +68,7 @@ export class SectorService {
       `WITH filtered AS (
          SELECT order_number, reference, quantity
            FROM customer_order_line
-          WHERE ${where}),
+          ${sql}),
        joined AS (
          SELECT f.order_number, f.quantity, p.sector
            FROM filtered f
@@ -84,7 +99,7 @@ export class SectorService {
     } = rows[0];
     return {
       source: 'Product + Customer_Order',
-      filters,
+      filters: describeFilters(filters, 'customer_order'),
       orders,
       lines,
       units,
