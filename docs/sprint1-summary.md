@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20 and #24).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20, #24, #22 and #23).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -235,3 +235,10 @@ The owner is written in each issue body, so these changes only count once the bo
 - Result: 3,647 checks, 0 differences. Run: `python docs/validation/validate_indicators.py --data-dir data --api http://localhost:3001` (API on a database loaded by the ETL). Throwaway Postgres container `val22-pg` (port 5690) was removed.
 - Not covered: abc/sizes, wave list and detail, filters/options, web pages (#23, #24). The script follows the same written rules as the API, so it finds implementation errors, not wrong rules.
 - Next: #25 (README), #23 (manual test plan and run).
+
+## Manual test plan and run (issue #23)
+- `docs/test-plan.md`: 94 cases run in headless Chrome (puppeteer-core, scripts outside the repo) against the real data on a throwaway Postgres 17 (port 5700, removed) with the API and `next start`: 89 pass, 3 fail, 2 observations. It covers every page, each filter, empty result, partial months and tooltips, comparison before the data start, thresholds and basis, the duplicates toggle, drill-down, the data quality panel, the wave list pager and sort, the wave detail, and the limitations. First time the client interactions (`router.replace`, pager, sort, AbcControls, tooltips, details) were clicked in a real browser. Not covered: native date picker and datalist popups, other browsers, small screens.
+- Defects found (needs-triage, not fixed here): #66 unclosed CSS rule at `globals.css:382` (lost in the #18/#19 merge) so wave table, pager, scroll box and sticky header are unstyled; #67 Overview and Products say "API did not answer" for a 400; #68 Zones badge repeats "meaning unknown".
+- Observations: filter changes use `router.replace`, so Back leaves the page; the filter-bar Reset also clears ABC basis and thresholds.
+- Next: fix #66 first (visible on /waves and /waves/<n>), then #67, #68; #25 (README); #26 (teacher questions). The sprint1 board was not read (token lacks `read:project`).
+
