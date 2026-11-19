@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AbcController } from './abc/abc.controller.js';
+import { AbcComparisonService } from './abc/abc-comparison.service.js';
 import { AbcService } from './abc/abc.service.js';
 import { AisleController } from './aisle/aisle.controller.js';
 import { AisleService } from './aisle/aisle.service.js';
@@ -24,6 +25,7 @@ import { HealthController } from './health.controller.js';
   providers: [
     DatabaseService,
     AbcService,
+    AbcComparisonService,
     AisleService,
     OrderSizeService,
     WaveSplitService,

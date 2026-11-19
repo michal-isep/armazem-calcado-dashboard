@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11 and #46).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46 and #12).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -160,3 +160,13 @@ The owner is written in each issue body, so these changes only count once the bo
 - Real data (lines basis, 80/95): 215,192 picks and units. Per aisle: I 36,288, R 25,925, J 24,153, M 22,750, L 22,373, K 21,211, H 17,244, O 14,574, P 13,902, N 13,777, Q 2,875; unknown bucket 120 (C 76, E 17, Z 15, G 12). Per class: A 168,181 (78.2%), B 33,407 (15.5%), C 13,604 (6.3%).
 - `gh project item-list 3` failed again (token lacks `read:project`), so the sprint1 board was not read this session.
 - Next for Leo: #15 (wave detail), then #19-#21 (web pages). #20 (Warehouse zones) can use this endpoint.
+
+## X4 computed ABC vs ABCCOD API (issue #12, Michal)
+- `GET /indicators/abc-comparison` takes the global filters plus `basis`, `thresholdA`, `thresholdB` (`@QueryFilters()`, `@QueryAbcParams()`, same as `/indicators/abc`). Code in `apps/api/src/abc/`: `abc-comparison.ts` (pure `compareAbc`, `summarise`, the notes), `abc-comparison.service.ts`, route in `abc.controller.ts`.
+- Response: `source`, `basis`, `thresholds`, `abccodNote` (the origin of `ABCCOD` is unknown; the UI shows it), `notRankedNote`, `filters` (the `FilterReport`), `summary` (`products`, `compared`, `matches`, `mismatches`, `notRanked`, `matchPercent`) and `references`, one per product: `computedClass` (null if none), `abccod`, `status` (`match`, `mismatch`, `not-ranked`), `rank`, `lines`, `units`.
+- Decision: a product with no valid order line in the date range has no computed class, so it is `not-ranked`, counted separately, and left out of the match count; `matchPercent` is matches / compared (null when nothing was compared). On the full range all 208 products are ranked. `ABCCOD` is compared trimmed and upper case.
+- Class comes from `AbcService.rank` (date range only, ADR 0002; the duplicates toggle reaches it, as in M1). Reference selects products (an unranked product can still be selected); customer and operator select products with a matching order line, so unranked products drop out; `abcClass` selects by computed class. None of them changes a class. Aisle is reported as not applied.
+- Real data (throwaway Postgres 17, `abc12-pg`, port 5660, stopped): lines 121 of 208 (87 mismatches), units 112 of 208 (96), no duplicates effect on lines; January only: 171 compared, 37 not ranked.
+- Tests: `abc-comparison.spec.ts` and `abc-comparison.service.spec.ts` (unit), `test/abc-comparison.e2e-spec.ts` (fixture 2 plus a product ordered only in February and one never ordered: match, mismatch, not-ranked, scoping with reference and customer, class filter, thresholds, 400s, empty range). 78 unit and all 13 e2e files (71 tests) pass; lint and build pass. Prettier still reports `etl/load.ts` and `health.controller.ts` (older, untouched).
+- Not done: the Products page X4 panel (#18) should show `abccodNote` and `notRankedNote`.
+- Next: #18 (Products page), #15 (wave detail), #19-#21.

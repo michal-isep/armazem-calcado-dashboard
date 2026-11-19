@@ -32,7 +32,7 @@ Common rules: all indicators are computed in the backend/database, respond to th
 | X1 | Lines per order | Customer_Order | Pick effort per order, separate from units. |
 | X2 | % of orders split across waves | Customer_Order | Directly measures the wave-composition problem (12.3% overall). |
 | X3 | Picks and units by aisle (first letter of `locations`), also by ABC class via `reference` | Picking_Wave | Shows concentration of work (Q3). **Effort = number of picks** (rows of Picking_Wave); units shown as secondary. |
-| X4 | Agreement between computed ABC and `Product.ABCCOD` | Customer_Order + Product | Tells whether the supplied classes are still valid. We do not know how `ABCCOD` was produced. |
+| X4 | Agreement between computed ABC and `Product.ABCCOD` | Customer_Order + Product | Tells whether the supplied classes are still valid. We do not know how `ABCCOD` was produced, and the response says so. Compares the computed class (M1, date range only) with `ABCCOD` per product; the match percentage is over products that have a computed class. Products with no valid order line in the range are reported as not ranked, neither match nor mismatch. |
 | A1 | Aisle share of picks (**proxy, not Sector**) | Picking_Wave | Picks per aisle / total picks. Rare aisles (C, E, Z, G) stay in their own bucket; their meaning is unknown. |
 
 ### Deferred (not dropped)
