@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #10).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #13).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -98,3 +98,13 @@ The owner is written in each issue body, so these changes only count once the bo
 - The ABC class filter is still missing (needs #7).
 - `gh project item-list 3` failed in this session: the token lacks the `read:project` scope (`gh auth refresh -s read:project`), so the sprint1 board was not read.
 - Next for Federico: #14, #17.
+
+## Global filters API (issue #13, Michal)
+- Code in `apps/api/src/filters/`: `filters.ts` (`parseFilters`, `buildWhere`, `describeFilters`), `query-filters.decorator.ts` (`@QueryFilters()`, 400 on bad input), `filters.controller.ts` (`GET /filters/options`: period, references, customers, operators, aisles, for the filter bar in #16).
+- Params: `from`, `to` (inclusive), `abcClass`, `reference`, `customer`, `operator`, `aisle`, `excludeDuplicates` (default false). `buildWhere(filters, source, { scope: 'dateOnly' })` gives the clause for computing ABC (ADR 0002). `abcClass` is parsed but never in SQL: #7 selects from the computed classes.
+- `describeFilters` returns `applied`, `notApplied` (with reason) and the duplicates toggle as requested/applied. Aisle is not applied to order indicators; customer and the toggle are not applied to picks.
+- Decision: Picking_Wave has no date, so the date range selects picks by wave start (earliest valid order line of the wave). Customer is not applied to picks.
+- Real data on a throwaway DB: period 2023-01-05 to 2023-10-19, 208 references, 588 customers, 24 operators, aisles C E G H I J K L M N O P Q R Z.
+- **Duplicate code to clean up:** Federico's `src/indicators/filters.ts` (`parseOrderFilters`, `orderFilterSql`, issues #8-#10) was merged while #13 was in progress, so there are now two filter implementations. The new one is a superset. Not refactored in #13 to avoid touching #8-#10; a follow-up should move the indicator services to `src/filters/` and add `describeFilters` to their responses.
+- Tests: 40 unit, 19 e2e (the e2e tests need `TEST_DATABASE_URL`). Throwaway Postgres (`-p f13`, port 5434) removed.
+- Next: #16 (web shell, now unblocked), then #7 (M1 ABC), which uses `scope: 'dateOnly'`.
