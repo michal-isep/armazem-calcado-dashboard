@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21 and #20).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20 and #24).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -213,3 +213,19 @@ The owner is written in each issue body, so these changes only count once the bo
 - ABC basis and thresholds use `AbcControls` and the `abc.ts` helpers from the Products page, so classes match M1. `CardFilters` shows the filters as applied or not (source `picking_wave`). An API error shows its message in the body; nothing falls back to data. Empty selection shows "No picks match the filters".
 - Verified: `tsc`, `eslint`, `npm run build`; page rendered by `next start` against a mock API (proxy tags, unknown bucket and coverage note present). **Not run against the real database or in a browser** this session. `web` has no prettier config: use `--single-quote` or it rewrites quotes.
 - Next for Leo: #24, #25. Then #22, #23.
+
+## Limitations check (issue #24, Leo)
+- Read all pages in `apps/web/app/` and the API notes they show (PR #61). Result per spec section 3:
+
+| Limitation | Where it appears | Status |
+|---|---|---|
+| M4/M5 not informative | Overview, badge on both cards with link to Zones (A1) | present |
+| Two ABC sources | Products, X4 card with the ABCCOD origin note; Overview M1 card now points to it | added (Overview) |
+| Data period 2023-01-05 to 2023-10-19, partial months | Under the filter bar on every page (from the API period); trend charts mark partial months with `*` | added (period note) |
+| Files not reconciled | Overview data quality panel, Waves list note, wave detail, Warehouse zones permanent note | present |
+| No order number in Picking_Wave | Data quality panel, Waves list, wave detail; Warehouse zones | added (Zones) |
+
+- Also replaced stale text: the Overview M1 card said "Not available yet ... issue #7" and the data quality panel said "M1 will join this comparison when issue #7 lands"; #7 is merged. The M1 card still shows no class counts (only a pointer to Products); a counts card is left to #17's owner if wanted.
+- Wording search (save, reduce, improve, expected, will, potential, optimise, forecast, cost, ...) over the web and API text: no forecast or saving wording. The only hit was the "will join" sentence above.
+- Verified: `npm run lint`, `npx tsc --noEmit`, `npm run build`. **Not run: real database, browser, rendered HTML** (the period note needs the API, so it was not seen rendered).
+- Next for Leo: #25. Then #22, #23.
