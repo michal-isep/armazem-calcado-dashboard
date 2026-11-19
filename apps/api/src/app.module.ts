@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { AbcController } from './abc/abc.controller.js';
 import { AbcService } from './abc/abc.service.js';
+import { AisleController } from './aisle/aisle.controller.js';
+import { AisleService } from './aisle/aisle.service.js';
 import { DatabaseService } from './database.service.js';
 import { FiltersController } from './filters/filters.controller.js';
 import { DataQualityService } from './indicators/data-quality.service.js';
@@ -17,10 +19,12 @@ import { HealthController } from './health.controller.js';
     FiltersController,
     IndicatorsController,
     AbcController,
+    AisleController,
   ],
   providers: [
     DatabaseService,
     AbcService,
+    AisleService,
     OrderSizeService,
     WaveSplitService,
     SectorService,
