@@ -409,3 +409,36 @@ a {
 .pager .greyed {
   opacity: 0.55;
 }
+
+/* Wave detail (issue #21): long order and pick lists scroll inside the card. */
+.scroll-table {
+  max-height: 24rem;
+  overflow: auto;
+  margin-top: 0.5rem;
+}
+
+.scroll-table .wave-table {
+  margin-top: 0;
+}
+
+.scroll-table thead th {
+  position: sticky;
+  top: 0;
+  background: Canvas;
+}
+
+.wave-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
+  gap: 1rem;
+}
+
+.wave-lists > .card {
+  margin-top: 0;
+  min-width: 0;
+}
+
+.item-list {
+  margin: 0;
+  padding-left: 1rem;
+}
