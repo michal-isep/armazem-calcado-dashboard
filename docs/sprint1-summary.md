@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #13).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #16).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -107,7 +107,7 @@ The owner is written in each issue body, so these changes only count once the bo
 - Real data on a throwaway DB: period 2023-01-05 to 2023-10-19, 208 references, 588 customers, 24 operators, aisles C E G H I J K L M N O P Q R Z.
 - **Duplicate code to clean up:** Federico's `src/indicators/filters.ts` (`parseOrderFilters`, `orderFilterSql`, issues #8-#10) was merged while #13 was in progress, so there are now two filter implementations. The new one is a superset. Not refactored in #13 to avoid touching #8-#10; a follow-up should move the indicator services to `src/filters/` and add `describeFilters` to their responses.
 - Tests: 40 unit, 19 e2e (the e2e tests need `TEST_DATABASE_URL`). Throwaway Postgres (`-p f13`, port 5434) removed.
-- Next: #16 (web shell, now unblocked), then #7 (M1 ABC), which uses `scope: 'dateOnly'`.
+- Next: #7 (M1 ABC), which uses `scope: 'dateOnly'`.
 
 ## Monthly trend API (issue #14, Federico)
 - `GET /indicators/monthly-trend` returns one entry per calendar month between the selected range and the data range, each with M2, M3, X1, X2 (`m2AverageOrderSize`, `m3AverageOrdersPerWave`, `x1LinesPerOrder`, `x2SplitOrdersPercent`) plus `orders`, `lines`, `units`, `waves`, `from`/`to` (part of the month actually covered), `daysCovered`, `daysInMonth` and `partial`. A month without matching orders is listed with null ratios. Code: `apps/api/src/indicators/monthly-trend.service.ts`, same filters as #8-#10 (`parseOrderFilters`, `orderFilterSql`).
@@ -116,3 +116,13 @@ The owner is written in each issue body, so these changes only count once the bo
 - The ABC class filter is still missing (needs #7), as in the other endpoints.
 - Tests: `monthly-trend.service.spec.ts` (unit, mocked database) and `test/monthly-trend.e2e-spec.ts` (spec section 8 fixture for January plus orders in February and April; checks partial flags, days covered, gap month, comparison ok and no-data). Ran all e2e files on a throwaway Postgres 17 (trust auth, port 5622), then removed it.
 - Next for Federico: #17 (Overview page).
+
+## Web shell and filter bar (issue #16, Michal)
+- Code in `apps/web/app/`: `lib/filters.ts` (URL <-> filter helpers, mirrors the API names; `notAppliedReason` mirrors `describeFilters`), `lib/api.ts` (server-only client: `getFilterOptions()`, `fetchIndicator(path, filters)`, `ApiError`), `components/` (`FilterBar`, `FilterBarLoader`, `NavLinks`, `CardFilters`), pages `/`, `/products`, `/waves`, `/zones` (the last three are placeholders for #18, #19, #20).
+- Filter state lives in the URL; the bar uses `router.replace`. The date range shows the full data period from `/filters/options` by default, and the default is not written to the URL (no `from`/`to` means the whole period). Reference and customer are `<input list>` and commit only a listed value. Reset clears the query. The nav links carry the query string.
+- The browser calls only Next.js: options are fetched in a Server Component (`connection()` inside `Suspense`, because of `cacheComponents`) and passed as props; `API_URL` is never in the client bundle (checked). No route handlers were needed.
+- For the card pages: `<CardFilters source="customer_order" | "picking_wave" report={response.filters} />` (inside `Suspense`) lists the active filters and greys out, with the reason, those that do not apply. Without `report` it uses the same rules from the source file. Pages read their data on the server with `filtersFromSearchParams(await searchParams)` and `fetchIndicator`.
+- Verified: `npm run lint`, `npm run build`, and a real run (throwaway Postgres 17 with trust auth on port 5436, ETL, API, `next start`): options, URL filters, nav links and greyed filters render server-side. Not tested in a real browser: the client-side `router.replace` interactions. An invalid URL value such as `from=garbage` is shown in the bar and only fails (400) when a card calls the API; cards must show that error, not fall back to data.
+- No web tests yet (no runner in the scaffold); not added because it was not requested.
+- Co-author on the commits: Paola, with `1260244@isep.ipp.pt` (derived from her ISEP number, confirm it).
+- Next: #7 (M1 ABC API). Per CLAUDE.md rule 6, start by adding the ABC class filter to `apps/api/src/indicators/filters.ts` and to the #8, #9, #10, #14 endpoints. Then #18 (Products page, needs #7) and #17 (Overview, needs #7 and the other APIs), which can now use the shell.
