@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Suspense } from 'react';
 import {
   getDataQuality,
@@ -49,9 +50,10 @@ async function Overview({
     <>
       <div className="kpi-grid">
         <KpiCard id="M1" title="ABC classification" source="customer_order">
-          <p className="kpi-value">Not available yet</p>
           <p className="kpi-basis">
-            Class counts need the computed ABC from issue #7.
+            The classes are computed from order lines, not read from
+            Product.ABCCOD. See the <Link href="/products">Products page</Link>{' '}
+            for the classes and the comparison with ABCCOD.
           </p>
         </KpiCard>
 

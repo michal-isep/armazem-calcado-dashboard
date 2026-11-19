@@ -75,7 +75,9 @@ async function Zones({
       )}
       <p className="note" role="note">
         {data?.coverageNote ??
-          'Picking_Wave covers about 94% of ordered units; the two files are not reconciled (ADR 0004), so aisle figures are approximate.'}
+          'Picking_Wave covers about 94% of ordered units; the two files are not reconciled (ADR 0004), so aisle figures are approximate.'}{' '}
+        Picking_Wave has no order number, so picks cannot be tied to orders (ADR
+        0005).
       </p>
 
       <section className="card" aria-labelledby="aisle-title">
