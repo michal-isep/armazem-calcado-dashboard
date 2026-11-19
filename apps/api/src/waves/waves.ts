@@ -162,3 +162,73 @@ export function notAppliedFilters(filters: Filters) {
     (filter) => ({ filter, reason: NOT_APPLIED_REASON }),
   );
 }
+
+// Wave list (issue #19): one row per wave of Customer_Order, with paging.
+
+export const DEFAULT_PAGE_SIZE = 50;
+export const MAX_PAGE_SIZE = 200;
+
+export type WaveSort = 'waveNumber' | 'firstCreatedAt';
+export type SortOrder = 'asc' | 'desc';
+
+export interface WaveListParams {
+  page: number;
+  pageSize: number;
+  sort: WaveSort;
+  order: SortOrder;
+}
+
+function one(query: Record<string, unknown>, name: string) {
+  const v = query[name];
+  if (v === undefined) return undefined;
+  if (typeof v !== 'string') {
+    throw new WaveParamError(`${name} must be given once, as text`);
+  }
+  const t = v.trim();
+  return t === '' ? undefined : t;
+}
+
+function whole(
+  query: Record<string, unknown>,
+  name: string,
+  fallback: number,
+  max: number,
+) {
+  const v = one(query, name);
+  if (v === undefined) return fallback;
+  const n = Number(v);
+  if (!/^\d+$/.test(v) || n < 1 || n > max) {
+    throw new WaveParamError(`${name} must be a whole number from 1 to ${max}`);
+  }
+  return n;
+}
+
+/** Validates page, pageSize, sort and order. Throws WaveParamError (400). */
+export function parseListParams(
+  query: Record<string, unknown>,
+): WaveListParams {
+  const sort = one(query, 'sort') ?? 'waveNumber';
+  if (sort !== 'waveNumber' && sort !== 'firstCreatedAt') {
+    throw new WaveParamError('sort must be waveNumber or firstCreatedAt');
+  }
+  const order = one(query, 'order') ?? 'asc';
+  if (order !== 'asc' && order !== 'desc') {
+    throw new WaveParamError('order must be asc or desc');
+  }
+  return {
+    page: whole(query, 'page', 1, 1_000_000),
+    pageSize: whole(query, 'pageSize', DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE),
+    sort,
+    order,
+  };
+}
+
+/** One wave as Customer_Order describes it. No picks: ADR 0004 and 0005. */
+export interface WaveListEntry {
+  waveNumber: string;
+  orders: number;
+  lines: number;
+  units: number;
+  firstCreatedAt: string;
+  lastCreatedAt: string;
+}

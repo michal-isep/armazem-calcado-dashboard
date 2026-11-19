@@ -39,3 +39,7 @@ export function formatMonth(month: string): string {
   const [year, number] = month.split('-');
   return `${MONTHS[Number(number) - 1]} ${year}`;
 }
+
+/** "2023-01-05T08:00:00" -> "2023-01-05 08:00". */
+export const formatDateTime = (iso: string) =>
+  iso.slice(0, 16).replace('T', ' ');
