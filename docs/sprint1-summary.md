@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #46).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11 and #46).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -150,3 +150,13 @@ The owner is written in each issue body, so these changes only count once the bo
 - Tests: 45 unit, 30 e2e (new `data-quality.e2e-spec.ts` and a customer/operator/report case in `order-size.e2e-spec.ts`). `next build` and lint pass. Checked on real data with a throwaway Postgres (trust auth, port 5633) and headless Chrome; remove it with `pg_ctl -D /tmp/i17/db stop`.
 - Not done: the hover tooltip was not exercised in a browser (only rendered); M1 card and the M1 line of the duplicates comparison wait for #7.
 - Next: #7 (M1 ABC; start with the ABC class filter, rule 6, then replace the M1 card and drop the `describeOrderFilters` override), #18-#21 (other pages), #22, #23.
+
+## Aisle picks API (issue #11, Leo)
+- `GET /indicators/aisle-picks` returns X3 (picks and units per aisle, most picks first) and A1 (`sharePercent` = aisle picks / selected picks, 0-100), labelled `"proxy, not Sector"` (ADR 0006). Code in `apps/api/src/aisle/` (`aisle.ts` pure grouping, `aisle.service.ts`, `aisle.controller.ts`).
+- Response: `totals`, `aisles` (each with `byClass` A/B/C/unclassified), `unknownAisles` (C, E, Z, G in their own bucket with a `label` saying the meaning is unknown, and its own picks, units and share), `classes` (picks per class over all aisles), `abc` (basis and thresholds used), `coverageNote` (about 94% of ordered units, ADR 0004), `filters` (the `FilterReport`).
+- Classes come from `AbcService.compute` on the date range only (ADR 0002), then picks are grouped through `reference`. Reference, operator, aisle and abcClass select picks and never change a class. A reference with picks but no class in the range is `unclassified` (0 on the real data). Accepts `basis`, `thresholdA`, `thresholdB` like `/indicators/abc`; the default is lines, 80/95, so classes match the Products page.
+- Filters: date range selects picks by wave start (#13); `customer` is reported as not applied. The duplicates toggle is reported as not applied to picks but still reaches the ABC ranking (same as M1), so with the toggle on the classes can differ slightly. Empty result: empty lists, null shares, no error. Bad input: 400.
+- Tests: `aisle.spec.ts` and `aisle.service.spec.ts` (unit, mocked database), `test/aisle.e2e-spec.ts` (fixture 2 orders plus hand-made picks: aisle bucket, unknown aisles, split by class, reference scoping, abcClass, wave-start date range, coverage note, empty result, 400s). 69 unit and 55 e2e tests pass on a throwaway Postgres 17 (trust auth, port 5655), removed afterwards. Lint passes; prettier reports two older files (`etl/load.ts`, `health.controller.ts`) that were not touched.
+- Real data (lines basis, 80/95): 215,192 picks and units. Per aisle: I 36,288, R 25,925, J 24,153, M 22,750, L 22,373, K 21,211, H 17,244, O 14,574, P 13,902, N 13,777, Q 2,875; unknown bucket 120 (C 76, E 17, Z 15, G 12). Per class: A 168,181 (78.2%), B 33,407 (15.5%), C 13,604 (6.3%).
+- `gh project item-list 3` failed again (token lacks `read:project`), so the sprint1 board was not read this session.
+- Next for Leo: #15 (wave detail), then #19-#21 (web pages). #20 (Warehouse zones) can use this endpoint.
