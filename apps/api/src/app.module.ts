@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { AbcController } from './abc/abc.controller.js';
+import { AbcService } from './abc/abc.service.js';
 import { DatabaseService } from './database.service.js';
 import { FiltersController } from './filters/filters.controller.js';
 import { IndicatorsController } from './indicators/indicators.controller.js';
@@ -9,9 +11,15 @@ import { WaveSplitService } from './indicators/wave-split.service.js';
 import { HealthController } from './health.controller.js';
 
 @Module({
-  controllers: [HealthController, FiltersController, IndicatorsController],
+  controllers: [
+    HealthController,
+    FiltersController,
+    IndicatorsController,
+    AbcController,
+  ],
   providers: [
     DatabaseService,
+    AbcService,
     OrderSizeService,
     WaveSplitService,
     SectorService,
