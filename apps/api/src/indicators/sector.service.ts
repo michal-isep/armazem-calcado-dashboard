@@ -47,7 +47,7 @@ export class SectorService {
     abcParams: AbcParams,
   ): Promise<SectorIndicators> {
     // The filters are applied to customer_order_line alone, before the join:
-    // orderFilterSql uses unqualified column names and `reference` exists in
+    // buildWhere uses unqualified column names and `reference` exists in
     // both tables, so filtering after the join would be ambiguous.
     const abcReferences = await this.abc.referencesInClass(filters, abcParams);
     const { sql, params } = buildWhere(filters, 'customer_order', {

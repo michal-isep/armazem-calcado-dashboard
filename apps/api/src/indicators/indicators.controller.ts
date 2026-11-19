@@ -2,6 +2,8 @@ import { Controller, Get } from '@nestjs/common';
 import { QueryAbcParams } from '../abc/abc-params.decorator.js';
 import type { AbcParams } from '../abc/abc.service.js';
 import type { Filters } from '../filters/filters.js';
+import type { DataQuality } from './data-quality.service.js';
+import { DataQualityService } from './data-quality.service.js';
 import { QueryFilters } from '../filters/query-filters.decorator.js';
 import type { MonthlyTrend } from './monthly-trend.service.js';
 import { MonthlyTrendService } from './monthly-trend.service.js';
@@ -23,6 +25,7 @@ export class IndicatorsController {
     private readonly waveSplit: WaveSplitService,
     private readonly sector: SectorService,
     private readonly monthlyTrend: MonthlyTrendService,
+    private readonly dataQuality: DataQualityService,
   ) {}
 
   // M2 average order size and X1 lines per order, with the orders, lines and
@@ -63,5 +66,12 @@ export class IndicatorsController {
     @QueryAbcParams() abc: AbcParams,
   ): Promise<MonthlyTrend> {
     return this.monthlyTrend.compute(filters, abc);
+  }
+
+  // Row counts excluded or flagged by the ETL and the disagreement between
+  // the order and picking files. Whole files: no filters.
+  @Get('data-quality')
+  getDataQuality(): Promise<DataQuality> {
+    return this.dataQuality.compute();
   }
 }
