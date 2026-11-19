@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
-import { OrderFilters, orderFilterSql } from './filters.js';
+import {
+  OrderFilters,
+  describeOrderFilters,
+  orderFilterSql,
+} from './filters.js';
+import type { FilterReport } from '../filters/filters.js';
 
 // Ratio indicators with the counts behind them (spec section 5: trend charts
 // show only M2, M3, X1 and X2; counts and units go in the tooltip). Ratios
@@ -32,7 +37,7 @@ export type ComparisonStatus = 'ok' | 'no-data';
 
 export interface MonthlyTrend {
   source: 'Customer_Order';
-  filters: OrderFilters;
+  filters: FilterReport;
   // First and last order date in the data; null when there are no orders.
   dataRange: { from: string; to: string } | null;
   months: MonthIndicators[];
@@ -112,7 +117,7 @@ export class MonthlyTrendService {
     if (!dataRange) {
       return {
         source: 'Customer_Order',
-        filters,
+        filters: describeOrderFilters(filters),
         dataRange: null,
         months: [],
         period: null,
@@ -165,7 +170,7 @@ export class MonthlyTrendService {
 
     return {
       source: 'Customer_Order',
-      filters,
+      filters: describeOrderFilters(filters),
       dataRange,
       months,
       period: { from, to, days },

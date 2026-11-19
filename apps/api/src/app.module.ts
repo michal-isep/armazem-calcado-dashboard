@@ -3,6 +3,7 @@ import { AbcController } from './abc/abc.controller.js';
 import { AbcService } from './abc/abc.service.js';
 import { DatabaseService } from './database.service.js';
 import { FiltersController } from './filters/filters.controller.js';
+import { DataQualityService } from './indicators/data-quality.service.js';
 import { IndicatorsController } from './indicators/indicators.controller.js';
 import { MonthlyTrendService } from './indicators/monthly-trend.service.js';
 import { OrderSizeService } from './indicators/order-size.service.js';
@@ -24,6 +25,7 @@ import { HealthController } from './health.controller.js';
     WaveSplitService,
     SectorService,
     MonthlyTrendService,
+    DataQualityService,
   ],
 })
 export class AppModule {}

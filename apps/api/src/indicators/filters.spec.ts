@@ -51,7 +51,7 @@ describe('orderFilterSql', () => {
       }),
     );
     expect(where).toBe(
-      'is_valid AND created_at >= $1::date AND created_at < ($2::date + 1) AND reference = $3 AND NOT is_duplicate',
+      'is_valid AND NOT is_duplicate AND created_at >= $1::date AND created_at < ($2::date + 1) AND reference = $3',
     );
     expect(params).toEqual(['2023-01-05', '2023-01-31', 'A']);
   });

@@ -56,3 +56,105 @@ export function fetchIndicator<T>(
 ): Promise<T & { filters: FilterReport }> {
   return get(path, filtersToQuery(filters));
 }
+
+export interface OrderSize {
+  source: 'Customer_Order';
+  orders: number;
+  lines: number;
+  units: number;
+  m2AverageOrderSize: number | null;
+  x1LinesPerOrder: number | null;
+}
+
+export interface WaveSplit {
+  source: 'Customer_Order';
+  orders: number;
+  waves: number;
+  lines: number;
+  m3AverageOrdersPerWave: number | null;
+  x2SplitOrdersPercent: number | null;
+}
+
+export interface SectorShare {
+  sector: string;
+  units: number;
+  lines: number;
+  orders: number;
+  sharePercent: number;
+}
+
+export interface Sector {
+  source: 'Product + Customer_Order';
+  orders: number;
+  lines: number;
+  units: number;
+  multiSectorOrders: number;
+  m4SectorShare: SectorShare[];
+  m5MultiSectorOrdersPercent: number | null;
+  notInformative: boolean;
+}
+
+export interface PeriodIndicators {
+  orders: number;
+  lines: number;
+  units: number;
+  waves: number;
+  m2AverageOrderSize: number | null;
+  m3AverageOrdersPerWave: number | null;
+  x1LinesPerOrder: number | null;
+  x2SplitOrdersPercent: number | null;
+}
+
+export interface MonthIndicators extends PeriodIndicators {
+  month: string; // YYYY-MM
+  from: string;
+  to: string;
+  daysCovered: number;
+  daysInMonth: number;
+  partial: boolean;
+}
+
+export interface MonthlyTrend {
+  source: 'Customer_Order';
+  dataRange: { from: string; to: string } | null;
+  months: MonthIndicators[];
+  period: { from: string; to: string; days: number } | null;
+  current: PeriodIndicators | null;
+  comparison: {
+    status: 'ok' | 'no-data';
+    reason?: 'before-data-start' | 'no-matching-orders';
+    from: string | null;
+    to: string | null;
+    indicators: PeriodIndicators | null;
+  };
+}
+
+export interface DataQuality {
+  customerOrder: {
+    rows: number;
+    excludedQuantityZero: number;
+    blankSizeUnknown: number;
+    exactDuplicates: number;
+  };
+  pickingWave: { rows: number; units: number };
+  sourceDisagreement: {
+    wavesInOrders: number;
+    wavesInPicking: number;
+    wavesMissingFromPicking: number;
+    orderUnits: number;
+    pickUnits: number;
+    unitsDifference: number;
+  };
+}
+
+export const getOrderSize = (f: FilterValues) =>
+  fetchIndicator<OrderSize>('/indicators/order-size', f);
+export const getWaveSplit = (f: FilterValues) =>
+  fetchIndicator<WaveSplit>('/indicators/wave-split', f);
+export const getSector = (f: FilterValues) =>
+  fetchIndicator<Sector>('/indicators/sector', f);
+export const getMonthlyTrend = (f: FilterValues) =>
+  fetchIndicator<MonthlyTrend>('/indicators/monthly-trend', f);
+// Whole files: the filters do not apply.
+export const getDataQuality = () =>
+  get<DataQuality>('/indicators/data-quality');

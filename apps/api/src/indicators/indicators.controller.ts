@@ -1,4 +1,6 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import type { DataQuality } from './data-quality.service.js';
+import { DataQualityService } from './data-quality.service.js';
 import { InvalidFilterError, parseOrderFilters } from './filters.js';
 import type { RawQuery } from './filters.js';
 import type { MonthlyTrend } from './monthly-trend.service.js';
@@ -17,6 +19,7 @@ export class IndicatorsController {
     private readonly waveSplit: WaveSplitService,
     private readonly sector: SectorService,
     private readonly monthlyTrend: MonthlyTrendService,
+    private readonly dataQuality: DataQualityService,
   ) {}
 
   // M2 average order size and X1 lines per order, with the orders, lines and
@@ -73,5 +76,12 @@ export class IndicatorsController {
       }
       throw error;
     }
+  }
+
+  // Row counts excluded or flagged by the ETL and the disagreement between
+  // the order and picking files. Whole files: no filters.
+  @Get('data-quality')
+  getDataQuality(): Promise<DataQuality> {
+    return this.dataQuality.compute();
   }
 }

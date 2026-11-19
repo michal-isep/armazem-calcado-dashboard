@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
-import { OrderFilters, orderFilterSql } from './filters.js';
+import {
+  OrderFilters,
+  describeOrderFilters,
+  orderFilterSql,
+} from './filters.js';
+import type { FilterReport } from '../filters/filters.js';
 
 export interface SectorShare {
   sector: string;
@@ -13,7 +18,7 @@ export interface SectorShare {
 
 export interface SectorIndicators {
   source: 'Product + Customer_Order';
-  filters: OrderFilters;
+  filters: FilterReport;
   orders: number;
   lines: number;
   units: number;
@@ -84,7 +89,7 @@ export class SectorService {
     } = rows[0];
     return {
       source: 'Product + Customer_Order',
-      filters,
+      filters: describeOrderFilters(filters),
       orders,
       lines,
       units,

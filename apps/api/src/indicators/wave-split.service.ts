@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
-import { OrderFilters, orderFilterSql } from './filters.js';
+import {
+  OrderFilters,
+  describeOrderFilters,
+  orderFilterSql,
+} from './filters.js';
+import type { FilterReport } from '../filters/filters.js';
 
 export interface WaveSplitIndicators {
   source: 'Customer_Order';
-  filters: OrderFilters;
+  filters: FilterReport;
   orders: number;
   waves: number;
   lines: number;
@@ -49,7 +54,7 @@ export class WaveSplitService {
     const { orders, waves, lines, pairs, split_orders: splitOrders } = rows[0];
     return {
       source: 'Customer_Order',
-      filters,
+      filters: describeOrderFilters(filters),
       orders,
       waves,
       lines,
