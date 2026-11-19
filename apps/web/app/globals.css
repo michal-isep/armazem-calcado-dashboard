@@ -382,6 +382,8 @@ a {
 #drill-title ~ h4,
 .card h4 {
   margin: 0.75rem 0 0.25rem;
+}
+
 .wave-table {
   border-collapse: collapse;
   font-size: 0.9rem;
