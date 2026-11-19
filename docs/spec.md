@@ -126,6 +126,7 @@ Total = 20 lines. Order: P 8, Q 6, R 3, S 2, T 1 (no ties).
 - Real-data cross-check (script on the original file): 122,370 rows, 33 with quantity 0. Distinct orders: 32,634 before, **32,632 after** exclusion (2 orders had only zero-quantity lines). Total units stay 228,195. M2 after exclusion = 228,195 / 32,632 = **6.993** (6.99 before).
 - Edge cases: empty filter result returns zeros/nulls without errors; a single-sector dataset gives M4 = 100% and M5 = 0%.
 
-## 9. Open items
-1. Ask the teacher whether the brief counts the wave detail view as a page (section 5).
-2. The meaning of Picking_Wave locations in aisles C, E, Z, G is unknown (see data-profile.md); not resolvable from the data.
+## 9. Decisions on the open items
+The teacher and data owners were not asked; on 2026-11-19 the lead asked Claude to decide. Both are **[ASSUMPTION]**s that can be reversed.
+1. **Wave detail view is not counted as a page.** It is a drill-through reached only from the wave list, it is not in the navigation, and it has no filters of its own. #21 stays as built. If the brief or the teacher says it counts as a page, cut it before cutting Warehouse zones (section 5).
+2. **Aisles C, E, Z, G stay a separate bucket with unknown meaning.** The data does not say what these 120 locations (0.06% of picks) are, so we do not guess, merge them into other aisles or drop them. The Warehouse zones page shows them in their own table, labelled "meaning unknown". If the data owner explains them later, only the label changes.

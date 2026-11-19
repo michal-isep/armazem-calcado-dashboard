@@ -39,8 +39,7 @@ Dashboard for the warehouse operations director of a footwear warehouse. The dir
 | 26 | Ask the teacher two questions | Michal |
 
 ## Open items
-- Does the brief count the wave detail view as a page? (issue #26, spec section 9)
-- What do Picking_Wave locations in aisles C, E, Z, G mean? 120 picks, unknown. (issue #26)
+- Decided without asking the teacher (issue #26, spec section 9): the wave detail view is not a page (#21 stays; cut it before Warehouse zones if the teacher says otherwise); aisles C, E, Z, G stay a separate "meaning unknown" bucket.
 - 24 issues due Monday 2026-11-23 is probably too much for Michal alone; on 2026-11-19 the programming issues were spread over Federico and Leo, who will use Claude Code themselves (README rule 4 still says to ask the lead first).
 - Issue #3 (scaffold) is done: PR #29 is merged into `main`.
 - Issue #4 (ETL) is done and merged (see ETL section). Next: #16 (web shell), #5 (Federico, check ETL counts) and the API issues #7-#15, which were waiting on the data.
@@ -247,3 +246,6 @@ The owner is written in each issue body, so these changes only count once the bo
 - Defects found (needs-triage, not fixed here): #66 unclosed CSS rule at `globals.css:382` (lost in the #18/#19 merge) so wave table, pager, scroll box and sticky header are unstyled; #67 Overview and Products say "API did not answer" for a 400; #68 Zones badge repeats "meaning unknown".
 - Observations: filter changes use `router.replace`, so Back leaves the page; the filter-bar Reset also clears ABC basis and thresholds.
 - Next: fix #66 first (visible on /waves and /waves/<n>), then #67, #68; #26 (teacher questions). The sprint1 board was not read (token lacks `read:project`).
+
+## Open questions decided (issue #26)
+- Both questions were decided by Claude at the lead's request and recorded as assumptions in `docs/spec.md` section 9 and `docs/data-profile.md`. No code change. Remaining work: #66, #67, #68.

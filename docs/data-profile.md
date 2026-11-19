@@ -47,6 +47,8 @@ Distinct orders: 32,634 before, 32,632 after excluding the 33 quantity-0 rows. T
 ## Rare aisles in Picking_Wave (meaning unknown)
 120 of 215,192 picks fall in aisles C, E, Z, G. They do not follow the `H-06-13` pattern of the main aisles.
 
+Nobody has explained them (nobody was asked; decided 2026-11-19, spec section 9). The dashboard keeps them as their own bucket, labelled "meaning unknown", and does not merge or drop them.
+
 | Aisle | Picks | Example locations |
 |---|---|---|
 | C | 76 | C-102 (31), C-026 (27), C-014 (6) |
