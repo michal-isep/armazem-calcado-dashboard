@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19.
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #4).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -42,10 +42,20 @@ Dashboard for the warehouse operations director of a footwear warehouse. The dir
 - Does the brief count the wave detail view as a page? (issue #26, spec section 9)
 - What do Picking_Wave locations in aisles C, E, Z, G mean? 120 picks, unknown. (issue #26)
 - 24 issues due Monday 2026-11-23 is probably too much for Michal alone; on 2026-11-19 the programming issues were spread over Federico and Leo, who will use Claude Code themselves (README rule 4 still says to ask the lead first).
-- Issue #3 (scaffold) is done: PR #29 is merged into `main` and the issue is closed. Next: #4 (ETL) and #16 (web shell), which were blocked by it.
+- Issue #3 (scaffold) is done: PR #29 is merged into `main`.
+- Issue #4 (ETL) is done and merged (see ETL section). Next: #16 (web shell), #5 (Federico, check ETL counts) and the API issues #7-#15, which were waiting on the data.
 - Scaffold decisions: npm, one `package.json` per app, no workspaces. API uses the plain `pg` driver, so the ORM choice (spec section 7) stays open. API port comes from `API_PORT` (default 3001); web reads `API_URL` on the server only. `GET /health` returns 200 `{status:"ok",database:"up"}` or 503. Compose has Postgres only; credentials come from env vars with no defaults. Port 5432 was already taken on Michal's machine, so set `POSTGRES_PORT` (e.g. 5433) in `.env`.
 - Verified locally: health 200 with the database up, 503 with it stopped, web page shows the API health. Used throwaway shell variables, no `.env` file created.
 - The `Picking_Wave` and `Customer_Order` files do not reconcile (77 waves missing, 13,003 fewer units); this is documented, not solved.
+
+## ETL (issue #4)
+- Code in `apps/api/src/etl/` (`transform.ts` row rules, `schema.ts` DDL, `load.ts` loader, `cli.ts`). Run: `cd apps/api && npm run etl` (needs `DATABASE_URL`; CSV folder `DATA_DIR`, default `../../data`; or `npm run etl -- <folder>`). Uses `csv-parse`.
+- One transaction: drops and recreates `product`, `customer_order_line`, `picking_wave_pick`, `etl_run_summary`, then loads. A failed run keeps the old data. Run twice on the real files gives identical counts. The CSVs are only read (checksums unchanged).
+- Quantity-0 lines are loaded with `is_valid = false` (not deleted); blank size is stored as `unknown`; `is_duplicate` marks every repeat after the first row identical in all columns. Indicators must filter `is_valid`, and exclude `is_duplicate` only when the toggle is on. Aisle is stored in `picking_wave_pick.aisle`. Sizes are kept as written, so Picking_Wave has `9.0` where Customer_Order has `9` (opaque label, not normalised).
+- Real-data counts: 122,370 order rows, 33 quantity 0, 16 blank sizes, 2,559 duplicates, 122,337 valid lines, 32,634 orders before and 32,632 after exclusion, 228,195 units; 215,192 picks and units; 208 products. All match the profile.
+- Correction: the profile described duplicates as same order/reference/size/quantity; that gives 4,627. The 2,559 figure is identical in all columns. Profile text fixed.
+- Tests: `src/etl/transform.spec.ts` (unit) and `test/etl.e2e-spec.ts` (spec section 8 fixture). The e2e test only runs with `TEST_DATABASE_URL` set, because the ETL wipes the tables.
+- Tested on a throwaway compose project (`-p etl4`, port 5433, throwaway credentials in shell variables, no `.env`). Remove it with `docker compose -p etl4 down -v`.
 
 ## Working preferences learned
 - No Claude attribution in commits or PRs.

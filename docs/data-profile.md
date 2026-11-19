@@ -21,7 +21,7 @@ Different files use different separators. The ETL must handle each one explicitl
 - Each order has exactly one customer and one creation date.
 - Total units: 228,195. Average units per order = 228,195 / 32,634 = 6.99 (before cleaning).
 - 33 rows have quantity 0. 16 rows have a blank `Size (US)`.
-- 2,559 rows are exact duplicates of another row (same order, reference, size, quantity).
+- 2,559 rows are exact duplicates of an earlier row (identical in all nine columns; confirmed by the ETL, issue #4). Matching only on order, reference, size and quantity would give 4,627, so that is not the definition used.
   Picking_Wave also repeats identical single-unit rows, so these are probably real repeated lines, not errors.
   They are kept (see spec, data handling).
 - 4,024 orders (12.3%) appear in more than one wave: an order can be split across waves.
