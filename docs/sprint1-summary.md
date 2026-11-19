@@ -98,3 +98,11 @@ The owner is written in each issue body, so these changes only count once the bo
 - The ABC class filter is still missing (needs #7).
 - `gh project item-list 3` failed in this session: the token lacks the `read:project` scope (`gh auth refresh -s read:project`), so the sprint1 board was not read.
 - Next for Federico: #14, #17.
+
+## Monthly trend API (issue #14, Federico)
+- `GET /indicators/monthly-trend` returns one entry per calendar month between the selected range and the data range, each with M2, M3, X1, X2 (`m2AverageOrderSize`, `m3AverageOrdersPerWave`, `x1LinesPerOrder`, `x2SplitOrdersPercent`) plus `orders`, `lines`, `units`, `waves`, `from`/`to` (part of the month actually covered), `daysCovered`, `daysInMonth` and `partial`. A month without matching orders is listed with null ratios. Code: `apps/api/src/indicators/monthly-trend.service.ts`, same filters as #8-#10 (`parseOrderFilters`, `orderFilterSql`).
+- `dataRange` is the first and last `created_at` in `customer_order_line`, ignoring filters. `partial` is true when the data does not cover the whole calendar month (January, October today); it is derived from `dataRange`, not hard-coded. An order counts in the month of its `created_at`, and X2 is measured inside the month.
+- `period` is the selected range (the data range when `from`/`to` are missing) with `current` over the whole range. `comparison` is the previous period of equal length immediately before it. It returns `status: "no-data"`, `indicators: null` and a `reason` when that period starts before the data (`before-data-start`, also when only partly before, because a shorter period would not be equal length) or has no matching order (`no-matching-orders`); never zeros.
+- The ABC class filter is still missing (needs #7), as in the other endpoints.
+- Tests: `monthly-trend.service.spec.ts` (unit, mocked database) and `test/monthly-trend.e2e-spec.ts` (spec section 8 fixture for January plus orders in February and April; checks partial flags, days covered, gap month, comparison ok and no-data). Ran all e2e files on a throwaway Postgres 17 (trust auth, port 5622), then removed it.
+- Next for Federico: #17 (Overview page).
