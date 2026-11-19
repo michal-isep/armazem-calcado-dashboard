@@ -11,3 +11,4 @@ data/*
 !data/.gitkeep
 *.csv
 .DS_Store
+*.tsbuildinfo
