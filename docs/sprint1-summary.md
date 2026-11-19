@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12 and #19).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19 and #18).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -182,6 +182,14 @@ The owner is written in each issue body, so these changes only count once the bo
 - `gh project item-list 3` failed again (token lacks `read:project`), so the sprint1 board was not read.
 - Next for Leo: #19-#21 (web pages; #21 uses this endpoint), #6 is done, #25 README.
 
+## Products (ABC) page (issue #18, Michal)
+- Page `apps/web/app/products/page.tsx` (Server Component under `Suspense`). Components: `ParetoChart.tsx` (server-rendered SVG: bars = share of the active basis, line = cumulative share, dashed A/B thresholds, hover title per bar), `AbcControls.tsx` (client: basis radios, threshold inputs with Apply, "Reset to 80/95"). Page state helpers in `lib/abc.ts`; types and fetchers (`getAbc`, `getAbcComparison`, `getAbcSizes`) in `lib/api.ts`.
+- State is in the URL next to the global filters: `basis`, `thresholdA`, `thresholdB` (sent to the API) and `drillClass`, `drillRef` (page only). Invalid values fall back to the defaults and the page says so. `withFilter` now keeps basis and thresholds when a filter changes and drops the drill position.
+- The active basis and thresholds are always shown in a banner (and again on the X4 panel). Drill-down: class table, then the references in a class, then the sizes of one reference, all with links. X4 panel shows the match percentage, `abccodNote`, `notRankedNote` and a per-product table.
+- **API addition made inside #18:** `GET /indicators/abc/sizes` (`abc-sizes.service.ts`, route in `abc.controller.ts`) returns the sizes of one reference (`reference` required, 400 otherwise) with lines, units and the share on the active basis; filters: date range, customer, operator, duplicates toggle. No existing endpoint gave sizes, and the issue asks for them.
+- Verified on real data (throwaway Postgres 17 `abc18-pg`, port 5680, stopped): page matches the API (lines 49/53/106 and 121 of 208 matching; units 51/49/108); invalid thresholds show the "ignored" message; headless Chrome screenshot of the Pareto and the drill-down. 106 unit tests, `next build` and lint pass.
+- Not done: the client interactions (radio, Apply, Reset, router.replace) were not clicked in a real browser; no e2e test for `/indicators/abc/sizes` (only the unit spec with a mocked database); the web has no test runner.
+- Next: #19, #20, #21 (Leo), #22, #23, #24. CLAUDE.md rule 6 is done and can be removed.
 ## Waves and orders page and wave list API (issue #19, Leo)
 - No endpoint listed waves (#9 gives totals, #15 one wave), so `GET /waves` was added (asked first, approved). Code in `apps/api/src/waves/` (`parseListParams` in `waves.ts`, `WavesService.list`, `WavesController.listWaves`). Source `Customer_Order`, valid lines only; per wave `orders`, `lines`, `units`, `firstCreatedAt`, `lastCreatedAt`. Shared filters, `abcClass` with `basis`/`thresholdA`/`thresholdB` like the indicators, duplicates toggle, `FilterReport` in `filters` (aisle reported as not applied). Paging `page`, `pageSize` (default 50, max 200); `sort` = `waveNumber` (default) or `firstCreatedAt`, `order` = `asc|desc`, ties by wave number. Bad input gives 400; a page past the end gives an empty list with `total`. No picks, aisle or "in Picking_Wave" flag (ADR 0004, 0005).
 - `WavesService` now also takes `AbcService`.

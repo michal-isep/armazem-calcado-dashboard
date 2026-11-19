@@ -52,7 +52,14 @@ export function filtersToQuery(filters: FilterValues): string {
   return q.toString();
 }
 
-/** Same URL with one filter changed; empty or null removes it. */
+/** Page settings that survive a filter change (Products page, issue #18). */
+const KEPT_PARAMS = ['basis', 'thresholdA', 'thresholdB'] as const;
+
+/**
+ * Same URL with one filter changed; empty or null removes it. The ABC basis
+ * and thresholds are kept; the drill-down position is dropped, because the
+ * class or reference it points at may no longer be in the selection.
+ */
 export function withFilter(
   params: URLSearchParams,
   name: FilterName,
@@ -61,7 +68,12 @@ export function withFilter(
   const next = filtersFromUrl(params);
   if (value) next[name] = value;
   else delete next[name];
-  return filtersToQuery(next);
+  const q = new URLSearchParams(filtersToQuery(next));
+  for (const key of KEPT_PARAMS) {
+    const v = params.get(key);
+    if (v) q.set(key, v);
+  }
+  return q.toString();
 }
 
 /**
