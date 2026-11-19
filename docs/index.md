@@ -4,6 +4,7 @@ Specifications are written before the code. Start with `spec.md`.
 
 | File or folder | Content |
 |---|---|
+| `user-guide.md` | How to use the dashboard: every page, section, button and filter. |
 | `spec.md` | Specification (v2): user, questions, indicators, limitations, data rules, filters, pages, acceptance fixtures. |
 | `GLOSSARY.md` | Shared vocabulary. |
 | `data-profile.md` | Facts measured on the original CSVs. |

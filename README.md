@@ -19,7 +19,7 @@ Stack: Next.js (frontend), NestJS (backend), PostgreSQL. Spec-driven development
 4. Ask the lead before running Claude Code (it spends the shared token budget).
 
 ## Layout
-- `docs/` - specification, glossary, decisions, test plan, validation, PDFs
+- `docs/` - specification, user guide (`docs/user-guide.md`), glossary, decisions, test plan, validation, PDFs
 - `apps/` - `api` (NestJS backend) and `web` (Next.js frontend)
 - `data/` - original CSVs, local only, never committed
 - `CLAUDE.md` - instructions Claude Code reads automatically
