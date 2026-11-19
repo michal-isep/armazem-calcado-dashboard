@@ -25,4 +25,10 @@ Stack: Next.js (frontend), NestJS (backend), PostgreSQL. Spec-driven development
 - `CLAUDE.md` - instructions Claude Code reads automatically
 
 ## Run locally
-To be completed once the app exists.
+Needs Node 24+, npm and Docker. Copy `.env.example` to `.env` and fill in the values (`.env` is git-ignored; never commit it). Export the same variables in the shell that starts the API and the web app.
+
+1. Database: `docker compose up -d --wait` (compose reads `.env`)
+2. API: `cd apps/api && npm install && npm run start:dev`, then check `GET /health`
+3. Web: `cd apps/web && npm install && npm run dev`, then open http://localhost:3000
+
+Full instructions will be completed in issue #25.

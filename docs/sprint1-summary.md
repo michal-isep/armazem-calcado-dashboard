@@ -42,7 +42,9 @@ Dashboard for the warehouse operations director of a footwear warehouse. The dir
 - Does the brief count the wave detail view as a page? (issue #26, spec section 9)
 - What do Picking_Wave locations in aisles C, E, Z, G mean? 120 picks, unknown. (issue #26)
 - 24 issues due Monday 2026-11-23 is probably too much for Michal alone; on 2026-11-19 the programming issues were spread over Federico and Leo, who will use Claude Code themselves (README rule 4 still says to ask the lead first).
-- Start with issue #3 (scaffold): every other issue is blocked by it or by #4 (ETL).
+- Issue #3 (scaffold) is done on branch `issue-3-scaffold` (PR `Closes #3`). Next: #4 (ETL) and #16 (web shell), which were blocked by it.
+- Scaffold decisions: npm, one `package.json` per app, no workspaces. API uses the plain `pg` driver, so the ORM choice (spec section 7) stays open. API port comes from `API_PORT` (default 3001); web reads `API_URL` on the server only. `GET /health` returns 200 `{status:"ok",database:"up"}` or 503. Compose has Postgres only; credentials come from env vars with no defaults. Port 5432 was already taken on Michal's machine, so set `POSTGRES_PORT` (e.g. 5433) in `.env`.
+- Verified locally: health 200 with the database up, 503 with it stopped, web page shows the API health. Used throwaway shell variables, no `.env` file created.
 - The `Picking_Wave` and `Customer_Order` files do not reconcile (77 waves missing, 13,003 fewer units); this is documented, not solved.
 
 ## Working preferences learned
