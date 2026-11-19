@@ -249,3 +249,7 @@ The owner is written in each issue body, so these changes only count once the bo
 
 ## Open questions decided (issue #26)
 - Both questions were decided by Claude at the lead's request and recorded as assumptions in `docs/spec.md` section 9 and `docs/data-profile.md`. No code change. Remaining work: #66, #67, #68.
+
+## Issue #67 (API 400 message on Overview and Products)
+- Overview and Products now show the API's reason ("API answered 400 for /indicators/order-size: from must be a real date, YYYY-MM-DD") instead of "the API did not answer", like Waves and Zones. `attempt()` (`app/lib/attempt.ts`) and `ApiProblem` (`app/components/ApiProblem.tsx`) are shared; Waves uses them too. Still generic: the data-quality panel and the "Comparison unavailable" line.
+- Checked against a fake API that answers 400 (`/?from=garbage`, `/products?from=garbage`); typecheck and eslint clean.
