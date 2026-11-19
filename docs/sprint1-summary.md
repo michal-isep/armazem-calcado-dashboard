@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #5).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #8).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -75,3 +75,10 @@ The owner is written in each issue body, so these changes only count once the bo
 - Federico: #8, #9, #10, #14 (API) and #17 (Overview page). #5 is done.
 - Paola takes #22 (validate indicators independently) because it needs only the CSVs and a spreadsheet or script, not the repo, and it is more independent when written by someone who did not build the API. She also drafts the #23 test plan now from `docs/spec.md` and runs it once #17-#20 exist, and takes #24 from Leo (Leo has #6, #11, #15, #19, #20, #21, #24, #25). Paola still needs a GitHub account; until then Federico posts her results in the issues.
 - Leo keeps #6, #11, #15, #19, #20, #21, #25.
+
+## M2 and X1 API (issue #8, Federico)
+- `GET /indicators/order-size` returns M2 (`m2AverageOrderSize` = units / distinct orders) and X1 (`x1LinesPerOrder` = lines / distinct orders) from `customer_order_line`, with `orders`, `lines`, `units`, `source: "Customer_Order"` and the filters applied. Both are `null` when no order matches. Code in `apps/api/src/indicators/`.
+- Filters supported now: `from`, `to` (YYYY-MM-DD, end date inclusive), `reference`, `excludeDuplicates=true|false`. Quantity-0 lines are always excluded. Bad input gives 400. `filters.ts` (`parseOrderFilters`, `orderFilterSql`) is meant to be reused by the other indicator endpoints; issue #13 can extend it.
+- Not done: the ABC class filter, because it needs the computed ABC from M1 (#7). Customer and operator filters are not added.
+- Tests: `filters.spec.ts` (unit) and `test/order-size.e2e-spec.ts` (spec section 8 fixture; needs `TEST_DATABASE_URL`, it recreates `customer_order_line`). Ran the e2e on a throwaway Postgres with trust auth on port 5588, then removed it.
+- Next for Federico: #9, #10, #14, #17.
