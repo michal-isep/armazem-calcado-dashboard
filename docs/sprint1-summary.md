@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #9).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #10).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -89,3 +89,12 @@ The owner is written in each issue body, so these changes only count once the bo
 - The e2e files recreate the same tables, so `vitest.config.e2e.ts` now sets `fileParallelism: false`; before this, running all e2e files at once could make them overwrite each other's fixture.
 - Paola is listed as co-author of the commits in the issue body; the commit has no co-author trailer because her git email is unknown. Add it if she wants it.
 - Next for Federico: #10, #14, #17.
+
+## M4 and M5 API (issue #10, Federico)
+- `GET /indicators/sector` returns M4 (`m4SectorShare`: per sector `units`, `lines`, `orders`, `sharePercent` = units / total units, 0-100) and M5 (`m5MultiSectorOrdersPercent` = orders with more than one distinct sector / orders, 0-100), with `orders`, `lines`, `units`, `multiSectorOrders`, `source: "Product + Customer_Order"` and the filters applied. `m5MultiSectorOrdersPercent` is `null` and `m4SectorShare` is `[]` when no order matches. Code: `apps/api/src/indicators/sector.service.ts`, same filters as #8/#9.
+- `notInformative` is `true` when at most one sector is present (today: every product is PF, so M4 = 100% and M5 = 0%), so the UI can show the badge (ADR 0006). No substitute for M5 is offered (ADR 0005); aisle is never called sector.
+- `orderFilterSql` uses unqualified columns and `reference` exists in both `customer_order_line` and `product`, so the filters are applied to `customer_order_line` in a CTE before the join with `product`. `filters.ts` is unchanged. Inner join is safe: every ordered reference exists in Product (data profile).
+- Tests: `sector.service.spec.ts` (unit, mocked database) and `test/sector.e2e-spec.ts` (spec section 8 fixture with fictional sectors S1 and S2: M4 = 40/60, M5 = 33.3%; single-sector case 100%/0%; empty result; duplicates toggle). Ran the e2e on a throwaway Postgres with trust auth on port 5611, then removed it.
+- The ABC class filter is still missing (needs #7).
+- `gh project item-list 3` failed in this session: the token lacks the `read:project` scope (`gh auth refresh -s read:project`), so the sprint1 board was not read.
+- Next for Federico: #14, #17.
