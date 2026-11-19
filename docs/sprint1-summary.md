@@ -265,3 +265,7 @@ The owner is written in each issue body, so these changes only count once the bo
 - Checked: api unit tests (120 pass), web `npm run lint` and `npm run build`; ran the README steps (throwaway Postgres on port 5599 instead of Docker, local CSV copy, ETL, API, `next start`) and loaded `/zones` in headless Chrome with `--virtual-time-budget`: one-sentence badge for aisles C, E, Z, G (120 picks), headings A / B / C, API keys unchanged. Not run: real browser interaction, the API e2e tests (need `TEST_DATABASE_URL`).
 - The issue did not name an owner in its body; the lead chose Leo's co-author line.
 - Next: nothing open from the manual test run except #26 (confirm the two assumptions with the teacher, issue #71). Throwaway cluster and CSV copy removed.
+
+## Theme switch (issue #77)
+- The header has a Theme control: System (default, follows `prefers-color-scheme`), Light, Dark. The choice is kept in `localStorage` (`theme`) and applied before first paint by a small inline script in `layout.tsx`; `globals.css` uses `data-theme` on `<html>`. Component: `app/components/ThemeToggle.tsx`. No change to the API or the indicators.
+- Checked in headless Chrome: system dark and light, forcing each, reload keeps the choice, back to System clears it, no console errors; lint, typecheck and build clean.

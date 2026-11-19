@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { FilterBarLoader } from "./components/FilterBarLoader";
 import { NavLinks } from "./components/NavLinks";
+import { THEME_INIT_SCRIPT, ThemeToggle } from "./components/ThemeToggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,10 +23,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body>
         <header className="shell">
-          <h1>Warehouse operations dashboard</h1>
+          <div className="shell-top">
+            <h1>Warehouse operations dashboard</h1>
+            <ThemeToggle />
+          </div>
           <Suspense fallback={<div className="nav">Loading navigation...</div>}>
             <NavLinks />
           </Suspense>
