@@ -274,3 +274,67 @@ export function getWaveList(filters: FilterValues, paging: WavePaging) {
   }
   return get<WaveList>('/waves', q.toString());
 }
+
+// Wave detail (issue #15). Mirrors WaveDetail in apps/api/src/waves/waves.service.ts.
+export interface WaveOrderEntry {
+  orderNumber: string;
+  customer: string;
+  createdAt: string;
+  /** Null when the order's lines in this wave have different operators. */
+  operator: string | null;
+  operators: string[];
+  lines: number;
+  units: number;
+  items: { reference: string; size: string; quantity: number }[];
+}
+
+export interface WavePick {
+  reference: string;
+  size: string;
+  quantity: number;
+  location: string;
+  aisle: string;
+  operator: string;
+}
+
+export interface WaveUnitCheck {
+  status: 'match' | 'mismatch' | 'not-comparable';
+  orderUnits: number;
+  pickUnits: number;
+  /** Picking_Wave units minus Customer_Order units; null if not comparable. */
+  difference: number | null;
+  note: string;
+}
+
+export interface WaveDetail {
+  waveNumber: string;
+  orders: {
+    source: 'Customer_Order';
+    inFile: boolean;
+    totals: { orders: number; lines: number; units: number };
+    orders: WaveOrderEntry[];
+    note: string | null;
+  };
+  picks: {
+    source: 'Picking_Wave';
+    inFile: boolean;
+    totals: { picks: number; units: number };
+    picks: WavePick[];
+    note: string | null;
+  };
+  unitCheck: WaveUnitCheck;
+  coverageNote: string;
+  linkNote: string;
+  filters: {
+    excludeDuplicates: { requested: boolean; appliesTo: string };
+    notApplied: { filter: FilterName; reason: string }[];
+  };
+}
+
+/** Only the duplicates toggle applies to a wave; the API ignores the rest. */
+export function getWaveDetail(waveNumber: string, filters: FilterValues) {
+  return get<WaveDetail>(
+    `/waves/${encodeURIComponent(waveNumber)}`,
+    filtersToQuery(filters),
+  );
+}

@@ -43,3 +43,6 @@ export function formatMonth(month: string): string {
 /** "2023-01-05T08:00:00" -> "2023-01-05 08:00". */
 export const formatDateTime = (iso: string) =>
   iso.slice(0, 16).replace('T', ' ');
+
+/** Signed whole number, e.g. "-13" or "+4"; zero stays "0". */
+export const formatSigned = (n: number) => `${n > 0 ? '+' : ''}${formatInt(n)}`;
