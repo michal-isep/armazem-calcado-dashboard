@@ -32,11 +32,29 @@ Different files use different separators. The ETL must handle each one explicitl
 - `ABCCOD` provided: A 44, B 70, C 94.
 - Every ordered reference exists in Product, and every product is ordered.
 
+## Picking_Wave.csv columns
+`waveNumber; reference; Size (US); quantityToPick (units); locations; operator`. It has `reference` and `operator`, but **no `orderNumber`**, so picks cannot be tied to orders. Customer_Order columns: `codCustomer; orderNumber; orderToCollect; Reference; Size (US); quantity (units); creationDate; waveNumber; operator`.
+
 ## Cross-file checks
 - 77 waves in Customer_Order have no rows in Picking_Wave (9,784 vs 9,707 waves).
 - Units in Picking_Wave (215,192) are lower than units in Customer_Order (228,195). The difference is not explained by the data.
 - Picking locations start with an aisle letter (I, R, J, M, L, K, H, O, P, N, Q, with a few C, E, Z, G).
   Picks are concentrated in aisles I (36,288), R, J, M, L.
+
+## Order recount after cleaning (script on the original file)
+Distinct orders: 32,634 before, 32,632 after excluding the 33 quantity-0 rows. Two orders had only zero-quantity lines. M2 after exclusion = 228,195 / 32,632 = 6.993.
+
+## Rare aisles in Picking_Wave (meaning unknown)
+120 of 215,192 picks fall in aisles C, E, Z, G. They do not follow the `H-06-13` pattern of the main aisles.
+
+| Aisle | Picks | Example locations |
+|---|---|---|
+| C | 76 | C-102 (31), C-026 (27), C-014 (6) |
+| E | 17 | E-25-20 (8), EX-11 (6), EX-01 (2) |
+| Z | 15 | ZN-COR (15) |
+| G | 12 | G-25-10 (12) |
+
+Meaning not documented. They stay in their own bucket (spec, A1).
 
 ## Consequences for the indicators
 1. **Sector share and multi-sector orders cannot distinguish anything**: 100% of units are `PF`, and 0% of orders are multi-sector.
