@@ -229,3 +229,9 @@ The owner is written in each issue body, so these changes only count once the bo
 - Wording search (save, reduce, improve, expected, will, potential, optimise, forecast, cost, ...) over the web and API text: no forecast or saving wording. The only hit was the "will join" sentence above.
 - Verified: `npm run lint`, `npx tsc --noEmit`, `npm run build`. **Not run: real database, browser, rendered HTML** (the period note needs the API, so it was not seen rendered).
 - Next for Leo: #25. Then #22, #23.
+
+## Indicator validation (issue #22)
+- `docs/validation/validate_indicators.py` recomputes M1-M5, X1-X4, A1 and the monthly trend from the CSVs with pandas and compares with the API over 20 scenarios (both bases, duplicates on/off, date ranges, reference, abcClass, thresholds, customer, operator, aisle, empty range). Report: `docs/validation/report.md`.
+- Result: 3,647 checks, 0 differences. Run: `python docs/validation/validate_indicators.py --data-dir data --api http://localhost:3001` (API on a database loaded by the ETL). Throwaway Postgres container `val22-pg` (port 5690) was removed.
+- Not covered: abc/sizes, wave list and detail, filters/options, web pages (#23, #24). The script follows the same written rules as the API, so it finds implementation errors, not wrong rules.
+- Next: #25 (README), #23 (manual test plan and run).
