@@ -269,3 +269,9 @@ The owner is written in each issue body, so these changes only count once the bo
 ## Theme switch (issue #77)
 - The header has a Theme control: System (default, follows `prefers-color-scheme`), Light, Dark. The choice is kept in `localStorage` (`theme`) and applied before first paint by a small inline script in `layout.tsx`; `globals.css` uses `data-theme` on `<html>`. Component: `app/components/ThemeToggle.tsx`. No change to the API or the indicators.
 - Checked in headless Chrome: system dark and light, forcing each, reload keeps the choice, back to System clears it, no console errors; lint, typecheck and build clean.
+
+## Deliverable PDFs and brief check (issue #79)
+- `docs/deliverables/`: `01-repository-guide.pdf` (every folder and file, data flow, routes, tests), `02-workflow.pdf` (spec-driven development with the Matt Pocock workflow: grilling, glossary and ADRs, issues, branch per issue, independent validation), `03-speech-5-minutes.pdf` (script of 465 words = 3:35 at 130 wpm, timing plan, demo path, number sources, likely questions). They were generated with reportlab from scripts kept outside the repo.
+- Checked against the brief (Enunciado 03): stack, main page plus three subpages, M1-M5 and extra indicators, filters, comparison over time, tooltip, drill-down, drill-through, reproducible ETL, API-only access, server-side calculation, automated tests, env vars, README, specs first. One open risk: the wave detail view is a route (`/waves/[n]`); if the teacher counts it as a fourth subpage, see issue #71 and spec section 9.
+- Fixed stale text: `docs/index.md` (was a placeholder) and the README layout lines.
+- Re-run on `main` before this: API unit 120/120, e2e 89/89, validation 3,647/3,647, browser scripts 93 of 96 (T07 and T08 are documented observations, W09 and F06 were test-script flaws), plus the new theme switch (#77).
