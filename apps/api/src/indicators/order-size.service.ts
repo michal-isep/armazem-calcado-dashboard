@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
-import { OrderFilters, orderFilterSql } from './filters.js';
+import {
+  OrderFilters,
+  describeOrderFilters,
+  orderFilterSql,
+} from './filters.js';
+import type { FilterReport } from '../filters/filters.js';
 
 export interface OrderSizeIndicators {
   source: 'Customer_Order';
-  filters: OrderFilters;
+  filters: FilterReport;
   orders: number;
   lines: number;
   units: number;
@@ -35,7 +40,7 @@ export class OrderSizeService {
     const { orders, lines, units } = rows[0];
     return {
       source: 'Customer_Order',
-      filters,
+      filters: describeOrderFilters(filters),
       orders,
       lines,
       units,
