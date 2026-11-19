@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19 and #18).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18 and #21).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -200,3 +200,10 @@ The owner is written in each issue body, so these changes only count once the bo
 - Not tested in a real browser: the pager and sort clicks, the trend tooltips, and the filter bar resetting the page (checked only as URLs and server HTML).
 - `gh project item-list 3` failed again (token lacks `read:project`), so the board was not read.
 - Next for Leo: #21 (wave detail view at `/waves/[waveNumber]`, uses `GET /waves/:waveNumber`), #20, #25.
+
+## Wave detail view (issue #21, Leo)
+- Web `apps/web/app/waves/[waveNumber]/page.tsx` (PR #57): server-side load in Suspense of `GET /waves/:waveNumber` (`getWaveDetail` and `WaveDetail` types in `lib/api.ts`, `formatSigned` in `lib/format.ts`, a few `.scroll-table` / `.wave-lists` rules in `globals.css`). Not in NavLinks. The API is unchanged.
+- Two separate lists, each labelled with its file: orders (Customer_Order, with items) and picks (Picking_Wave, with location and aisle), each in a `<details>` with a scrolling table. Never matched (ADR 0005); the API's `linkNote` is shown. The unit check shows both totals and the difference without naming a file as right (ADR 0004), plus `coverageNote`. A side with no rows shows "no rows" and the API's note. Only the duplicates toggle applies; the other active filters are listed as not applied with the API's reason. The back link keeps the filters. 404 and 400 show the API's message and the back link.
+- Verified: `npm run lint`, `npm run build`, and a real run (throwaway Postgres 17, ETL, API, `next start`, read through the rendered HTML): 33168 match (24 and 24), 33170 mismatch (24 vs 23), 33219 Customer_Order only, 43175 with split order 124437 (also in wave 43174), 42035 duplicates toggle (order units 25 to 5, so mismatch +20), 99999 404, `abc` 400, `from=garbage` 400. Not tested in a real browser (collapsing, scrolling, sticky header, layout).
+- Notes: an error is shown in the page body but the HTTP status of the page is still 200 (the response streams inside Suspense), like the other pages. No wave in the real data has only quantity-0 lines, so that note was not seen on real data (covered by the API e2e test). Pick sizes come as `11.0` and order sizes as `11`; shown as the files have them. The list page link carries only the filters, so the back link returns to page 1 and the default sort.
+- Next for Leo: #20 (Warehouse zones), #24, #25. Then #22, #23.
