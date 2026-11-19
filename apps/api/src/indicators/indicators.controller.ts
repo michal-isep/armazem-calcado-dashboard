@@ -1,6 +1,8 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { InvalidFilterError, parseOrderFilters } from './filters.js';
 import type { RawQuery } from './filters.js';
+import type { MonthlyTrend } from './monthly-trend.service.js';
+import { MonthlyTrendService } from './monthly-trend.service.js';
 import type { OrderSizeIndicators } from './order-size.service.js';
 import { OrderSizeService } from './order-size.service.js';
 import type { SectorIndicators } from './sector.service.js';
@@ -14,6 +16,7 @@ export class IndicatorsController {
     private readonly orderSize: OrderSizeService,
     private readonly waveSplit: WaveSplitService,
     private readonly sector: SectorService,
+    private readonly monthlyTrend: MonthlyTrendService,
   ) {}
 
   // M2 average order size and X1 lines per order, with the orders, lines and
@@ -50,6 +53,20 @@ export class IndicatorsController {
   async getSector(@Query() query: RawQuery): Promise<SectorIndicators> {
     try {
       return await this.sector.compute(parseOrderFilters(query));
+    } catch (error) {
+      if (error instanceof InvalidFilterError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  // Monthly M2, M3, X1 and X2 with counts, days covered and partial-month
+  // flags, plus the comparison with the previous equal-length period.
+  @Get('monthly-trend')
+  async getMonthlyTrend(@Query() query: RawQuery): Promise<MonthlyTrend> {
+    try {
+      return await this.monthlyTrend.compute(parseOrderFilters(query));
     } catch (error) {
       if (error instanceof InvalidFilterError) {
         throw new BadRequestException(error.message);
