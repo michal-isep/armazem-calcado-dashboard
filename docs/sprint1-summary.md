@@ -275,3 +275,7 @@ The owner is written in each issue body, so these changes only count once the bo
 - Checked against the brief (Enunciado 03): stack, main page plus three subpages, M1-M5 and extra indicators, filters, comparison over time, tooltip, drill-down, drill-through, reproducible ETL, API-only access, server-side calculation, automated tests, env vars, README, specs first. One open risk: the wave detail view is a route (`/waves/[n]`); if the teacher counts it as a fourth subpage, see issue #71 and spec section 9.
 - Fixed stale text: `docs/index.md` (was a placeholder) and the README layout lines.
 - Re-run on `main` before this: API unit 120/120, e2e 89/89, validation 3,647/3,647, browser scripts 93 of 96 (T07 and T08 are documented observations, W09 and F06 were test-script flaws), plus the new theme switch (#77).
+
+## User guide (issue #83)
+- `docs/user-guide.md` explains the dashboard as a guide for its user: the header (theme, navigation, filter bar and each filter), every page and card, the charts, the tooltip, drill-down and drill-through, the data quality panel, the limitations and a table of typical tasks. Linked from `docs/index.md` and the README.
+- Written from the rendered pages of the running dashboard (real data), so labels and numbers match what the user sees (for example 58.2% match on X4, 12.3% split orders, aisle I 16.9%).
