@@ -131,4 +131,4 @@ Not yet. Open on the tracker: #26 (the two questions for the teacher, which also
 
 ## Recheck after fixes
 - 2026-11-19, V03 (defect #66): fixed by PR #72. Rechecked by building `apps/web`, confirming the built CSS has `.wave-table`, `.pager`, `.scroll-table`, `.wave-lists` and `.item-list` as top-level rules, and looking at headless Chrome screenshots of `/waves` and `/waves/36611` on the real data (cell padding, underlined links, orders list cut at its scroll box, two lists side by side). The sticky header while scrolling was not rechecked. The original FAIL result above is unchanged.
-
+- 2026-11-19, Z01 (defect #68): fixed by PR #75. Rechecked by running the README steps on the real data (throwaway Postgres, ETL, API, `next start`) and loading `/zones` in headless Chrome after client rendering: the badge reads "Meaning unknown: the data does not say what locations in these aisles are" once, aisles C, E, Z, G with 120 picks, and the headings read "Picks, class A / B / C". The API response has the same keys. Not rechecked by hand in a real browser. The original FAIL/PASS result above is unchanged.

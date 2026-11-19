@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20, #24, #25, #22, #23 and #66).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20, #24, #25, #22, #23, #66, #67 and #68).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -260,3 +260,8 @@ The owner is written in each issue body, so these changes only count once the bo
 - Not checked: sticky header while scrolling, pager links (below the fold in the screenshot), computed styles in dev tools. The issue did not name an owner in its body.
 - Next: #67, #68. The throwaway cluster and CSV copy were removed.
 
+## Zones badge wording fixed (issue #68)
+- PR #75 merged. The API label in `apps/api/src/aisle/aisle.ts` is now capitalised ("Meaning unknown: the data does not say what locations in these aisles are") and `apps/web/app/zones/page.tsx` shows it without its own prefix, so the badge is one sentence. Decided to fix it in the API label because the label already carried the words; the response shape is unchanged (only the string value). No test asserted the exact text (they match `/unknown/`). The column headings now read "Picks, class A / B / C" (and "no class").
+- Checked: api unit tests (120 pass), web `npm run lint` and `npm run build`; ran the README steps (throwaway Postgres on port 5599 instead of Docker, local CSV copy, ETL, API, `next start`) and loaded `/zones` in headless Chrome with `--virtual-time-budget`: one-sentence badge for aisles C, E, Z, G (120 picks), headings A / B / C, API keys unchanged. Not run: real browser interaction, the API e2e tests (need `TEST_DATABASE_URL`).
+- The issue did not name an owner in its body; the lead chose Leo's co-author line.
+- Next: nothing open from the manual test run except #26 (confirm the two assumptions with the teacher, issue #71). Throwaway cluster and CSV copy removed.
