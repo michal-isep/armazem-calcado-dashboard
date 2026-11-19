@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18 and #21).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21 and #20).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -207,3 +207,9 @@ The owner is written in each issue body, so these changes only count once the bo
 - Verified: `npm run lint`, `npm run build`, and a real run (throwaway Postgres 17, ETL, API, `next start`, read through the rendered HTML): 33168 match (24 and 24), 33170 mismatch (24 vs 23), 33219 Customer_Order only, 43175 with split order 124437 (also in wave 43174), 42035 duplicates toggle (order units 25 to 5, so mismatch +20), 99999 404, `abc` 400, `from=garbage` 400. Not tested in a real browser (collapsing, scrolling, sticky header, layout).
 - Notes: an error is shown in the page body but the HTTP status of the page is still 200 (the response streams inside Suspense), like the other pages. No wave in the real data has only quantity-0 lines, so that note was not seen on real data (covered by the API e2e test). Pick sizes come as `11.0` and order sizes as `11`; shown as the files have them. The list page link carries only the filters, so the back link returns to page 1 and the default sort.
 - Next for Leo: #20 (Warehouse zones), #24, #25. Then #22, #23.
+
+## Warehouse zones page (issue #20, Leo)
+- Web `apps/web/app/zones/page.tsx` (PR #59): server-side load in Suspense of `GET /indicators/aisle-picks` (`getAislePicks` and the `AislePicks` types in `lib/api.ts`; the API is unchanged). Two cards: A1 aisle share of picks with X3 picks per ABC class (A, B, C, no class) per aisle, and X3 picks by ABC class. Both are tagged "Proxy, not Sector" (ADR 0006). Aisles C, E, Z, G are a separate table marked "meaning unknown" with the API's label, shown only when they have picks. The coverage note (about 94%, ADR 0004) is always on the page, from the API or a fixed fallback when the API fails. Effort is picks; units are secondary.
+- ABC basis and thresholds use `AbcControls` and the `abc.ts` helpers from the Products page, so classes match M1. `CardFilters` shows the filters as applied or not (source `picking_wave`). An API error shows its message in the body; nothing falls back to data. Empty selection shows "No picks match the filters".
+- Verified: `tsc`, `eslint`, `npm run build`; page rendered by `next start` against a mock API (proxy tags, unknown bucket and coverage note present). **Not run against the real database or in a browser** this session. `web` has no prettier config: use `--single-quote` or it rewrites quotes.
+- Next for Leo: #24, #25. Then #22, #23.
