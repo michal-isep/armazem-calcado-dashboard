@@ -16,5 +16,15 @@ export async function FilterBarLoader() {
       </p>
     );
   }
-  return <FilterBar options={options} />;
+  return (
+    <>
+      <FilterBar options={options} />
+      {options.period && (
+        <p className="note">
+          The data covers {options.period.from} to {options.period.to} only. The
+          first and last months are partial months.
+        </p>
+      )}
+    </>
+  );
 }
