@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46 and #12).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12 and #19).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -181,3 +181,14 @@ The owner is written in each issue body, so these changes only count once the bo
 - Real data: wave 33168 in both files (24 order lines and 24 picks, 24 units each, match); 43117 only in Customer_Order (1 order, 0 picks, not-comparable); 33170 mismatch (24 order units vs 23 pick units); 43175 split orders show only that wave's lines; 99999 gives 404; `abc` gives 400. 2,313 waves in both files have different units; no wave is in Picking_Wave only; no order has different operators within a wave.
 - `gh project item-list 3` failed again (token lacks `read:project`), so the sprint1 board was not read.
 - Next for Leo: #19-#21 (web pages; #21 uses this endpoint), #6 is done, #25 README.
+
+## Waves and orders page and wave list API (issue #19, Leo)
+- No endpoint listed waves (#9 gives totals, #15 one wave), so `GET /waves` was added (asked first, approved). Code in `apps/api/src/waves/` (`parseListParams` in `waves.ts`, `WavesService.list`, `WavesController.listWaves`). Source `Customer_Order`, valid lines only; per wave `orders`, `lines`, `units`, `firstCreatedAt`, `lastCreatedAt`. Shared filters, `abcClass` with `basis`/`thresholdA`/`thresholdB` like the indicators, duplicates toggle, `FilterReport` in `filters` (aisle reported as not applied). Paging `page`, `pageSize` (default 50, max 200); `sort` = `waveNumber` (default) or `firstCreatedAt`, `order` = `asc|desc`, ties by wave number. Bad input gives 400; a page past the end gives an empty list with `total`. No picks, aisle or "in Picking_Wave" flag (ADR 0004, 0005).
+- `WavesService` now also takes `AbcService`.
+- Web `apps/web/app/waves/page.tsx`: cards M3, X1, X2 (value, comparison from monthly-trend or "no data" with reason, orders/lines/waves behind it, source `Customer_Order`, `CardFilters`), M3/X1/X2 trend charts with partial months (January, October) marked and listed, and the wave list (paging and sort links, URL params `page`, `sort`, `order`; changing a filter resets them). Each wave links to `/waves/<n>` carrying the filters; `apps/web/app/waves/[waveNumber]/page.tsx` is a **placeholder for #21**.
+- API errors (400 and others) are shown on the page with the API's reason; `ApiError` in `lib/api.ts` now keeps the API's `message`. Nothing falls back to data. The Overview still hides errors behind "API did not answer".
+- Tests: 116 unit and 89 e2e (new list cases in `waves.e2e-spec.ts`) on a throwaway Postgres 17 (trust auth, port 5681), removed. API lint passes; prettier still flags `etl/load.ts` and `health.controller.ts`. Web: `npm run lint` and `npm run build` pass; no web test runner (not added). Note: `web` has no prettier config, so use `--config ../api/.prettierrc` or it rewrites quotes.
+- Real data (ETL on a throwaway database, API and `next start`, checked through the rendered HTML): 9,784 waves; M3 4.07, X1 3.75, X2 12.3%, comparison "no data" on the full period; Jun-Jul 2023 compares against Apr-May (M3 3.69 vs 3.81); filters shown greyed (aisle not applied); `from=garbage` and `page=0` show the 400 reason; no match shows "no data", never zero; a page past the end says so. Links `/waves/33168` (both files) and `/waves/33219` (one of the 77 missing from Picking_Wave) return 200 and the API answers match / not-comparable.
+- Not tested in a real browser: the pager and sort clicks, the trend tooltips, and the filter bar resetting the page (checked only as URLs and server HTML).
+- `gh project item-list 3` failed again (token lacks `read:project`), so the board was not read.
+- Next for Leo: #21 (wave detail view at `/waves/[waveNumber]`, uses `GET /waves/:waveNumber`), #20, #25.
