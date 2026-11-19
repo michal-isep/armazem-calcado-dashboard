@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { ApiProblem } from '../components/ApiProblem';
 import { AbcControls } from '../components/AbcControls';
 import { CardFilters } from '../components/CardFilters';
 import { ParetoChart } from '../components/ParetoChart';
@@ -10,19 +11,10 @@ import {
   viewToQuery,
   type AbcView,
 } from '../lib/abc';
+import { attempt } from '../lib/attempt';
 import { getAbc, getAbcComparison, getAbcSizes } from '../lib/api';
 import { filtersFromSearchParams, type FilterValues } from '../lib/filters';
 import { formatInt, formatPercent } from '../lib/format';
-
-const settle = <T,>(p: Promise<T>) => p.catch(() => null);
-
-function Unavailable({ what }: { what: string }) {
-  return (
-    <p role="alert" className="error">
-      {what} unavailable: the API did not answer or rejected the filters.
-    </p>
-  );
-}
 
 const href = (filters: FilterValues, view: AbcView) => {
   const q = viewToQuery(filters, view);
@@ -43,13 +35,16 @@ async function Products({
 
   const sizeFilters = { ...filters, reference: view.drillRef };
   delete sizeFilters.abcClass;
-  const [abc, comparison, sizes] = await Promise.all([
-    settle(getAbc(query)),
-    settle(getAbcComparison(query)),
+  const [abcR, comparisonR, sizesR] = await Promise.all([
+    attempt(getAbc(query)),
+    attempt(getAbcComparison(query)),
     view.drillRef
-      ? settle(getAbcSizes(abcApiQuery(sizeFilters, view)))
+      ? attempt(getAbcSizes(abcApiQuery(sizeFilters, view)))
       : Promise.resolve(undefined),
   ]);
+  const abc = abcR.data ?? null;
+  const comparison = comparisonR.data ?? null;
+  const sizes = sizesR?.data ?? null;
 
   const basisLabel = BASIS_LABEL[view.basis];
   const inClass = abc?.references.filter(
@@ -86,7 +81,7 @@ async function Products({
             <CardFilters source="customer_order" report={abc.filters} />
           </>
         ) : (
-          <Unavailable what="The ABC classification" />
+          <ApiProblem what="The ABC classification" error={abcR.error ?? ''} />
         )}
       </section>
 
@@ -193,7 +188,7 @@ async function Products({
                 </small>
               </h4>
               {!sizes ? (
-                <Unavailable what="The sizes" />
+                <ApiProblem what="The sizes" error={sizesR?.error ?? ''} />
               ) : sizes.sizes.length === 0 ? (
                 <p>No valid order lines for this reference in the selection.</p>
               ) : (
@@ -285,7 +280,7 @@ async function Products({
             <CardFilters source="customer_order" report={comparison.filters} />
           </>
         ) : (
-          <Unavailable what="The X4 comparison" />
+          <ApiProblem what="The X4 comparison" error={comparisonR.error ?? ''} />
         )}
       </section>
     </>

@@ -7,25 +7,16 @@ import {
   getSector,
   getWaveSplit,
 } from './lib/api';
+import { attempt } from './lib/attempt';
 import { filtersFromSearchParams } from './lib/filters';
 import { formatInt, formatPercent, formatRatio } from './lib/format';
+import { ApiProblem } from './components/ApiProblem';
 import { DataQualityPanel } from './components/DataQualityPanel';
 import { Comparison, KpiCard, NotInformativeBadge } from './components/Kpi';
 import { TrendChart } from './components/TrendChart';
 
-/** The value, or null when that one request failed (the page still renders). */
-const settle = <T,>(p: Promise<T>) => p.catch(() => null);
-
 const basisOf = (orders: number, lines: number) =>
   `${formatInt(orders)} orders, ${formatInt(lines)} lines`;
-
-function Unavailable({ what }: { what: string }) {
-  return (
-    <p role="alert" className="error">
-      {what} unavailable: the API did not answer.
-    </p>
-  );
-}
 
 async function Overview({
   searchParams,
@@ -35,16 +26,23 @@ async function Overview({
   const filters = filtersFromSearchParams(await searchParams);
   const rest = { ...filters };
   delete rest.excludeDuplicates;
-  const [size, split, sector, trend, quality, kept, dropped] =
+  const [sizeR, splitR, sectorR, trendR, qualityR, keptR, droppedR] =
     await Promise.all([
-      settle(getOrderSize(filters)),
-      settle(getWaveSplit(filters)),
-      settle(getSector(filters)),
-      settle(getMonthlyTrend(filters)),
-      settle(getDataQuality()),
-      settle(getOrderSize(rest)),
-      settle(getOrderSize({ ...rest, excludeDuplicates: 'true' })),
+      attempt(getOrderSize(filters)),
+      attempt(getWaveSplit(filters)),
+      attempt(getSector(filters)),
+      attempt(getMonthlyTrend(filters)),
+      attempt(getDataQuality()),
+      attempt(getOrderSize(rest)),
+      attempt(getOrderSize({ ...rest, excludeDuplicates: 'true' })),
     ]);
+  const size = sizeR.data ?? null;
+  const split = splitR.data ?? null;
+  const sector = sectorR.data ?? null;
+  const trend = trendR.data ?? null;
+  const quality = qualityR.data ?? null;
+  const kept = keptR.data ?? null;
+  const dropped = droppedR.data ?? null;
 
   return (
     <>
@@ -77,7 +75,7 @@ async function Overview({
               />
             </>
           ) : (
-            <Unavailable what="M2" />
+            <ApiProblem what="M2" error={sizeR.error ?? ''} />
           )}
         </KpiCard>
 
@@ -105,7 +103,7 @@ async function Overview({
               />
             </>
           ) : (
-            <Unavailable what="M3" />
+            <ApiProblem what="M3" error={splitR.error ?? ''} />
           )}
         </KpiCard>
 
@@ -134,7 +132,7 @@ async function Overview({
               </ul>
             )
           ) : (
-            <Unavailable what="M4" />
+            <ApiProblem what="M4" error={sectorR.error ?? ''} />
           )}
         </KpiCard>
 
@@ -152,7 +150,7 @@ async function Overview({
               <small>of orders</small>
             </p>
           ) : (
-            <Unavailable what="M5" />
+            <ApiProblem what="M5" error={sectorR.error ?? ''} />
           )}
         </KpiCard>
       </div>
@@ -195,7 +193,7 @@ async function Overview({
             )}
           </>
         ) : (
-          <Unavailable what="The monthly trend" />
+          <ApiProblem what="The monthly trend" error={trendR.error ?? ''} />
         )}
       </section>
 

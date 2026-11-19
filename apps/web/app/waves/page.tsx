@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import {
-  ApiError,
   getMonthlyTrend,
   getOrderSize,
   getWaveList,
@@ -9,9 +8,11 @@ import {
   type MonthIndicators,
   type WaveList,
 } from '../lib/api';
+import { ApiProblem } from '../components/ApiProblem';
 import { CardFilters } from '../components/CardFilters';
 import { Comparison, KpiCard } from '../components/Kpi';
 import { TrendChart } from '../components/TrendChart';
+import { attempt } from '../lib/attempt';
 import { filtersFromSearchParams, filtersToQuery } from '../lib/filters';
 import {
   formatDateTime,
@@ -20,26 +21,6 @@ import {
   formatPercent,
   formatRatio,
 } from '../lib/format';
-
-type Attempt<T> =
-  { data: T; error?: undefined } | { data?: undefined; error: string };
-
-/** The value or the API's error message, so a failure is shown, not hidden. */
-async function attempt<T>(p: Promise<T>): Promise<Attempt<T>> {
-  try {
-    return { data: await p };
-  } catch (e) {
-    return { error: e instanceof ApiError ? e.message : 'Request failed' };
-  }
-}
-
-function ApiProblem({ what, error }: { what: string; error: string }) {
-  return (
-    <p role="alert" className="error">
-      {what} unavailable. {error}
-    </p>
-  );
-}
 
 const basisOf = (orders: number, lines: number) =>
   `${formatInt(orders)} orders, ${formatInt(lines)} lines`;
