@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20, #24, #25, #22 and #23).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20, #24, #25, #22, #23 and #66).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -253,3 +253,10 @@ The owner is written in each issue body, so these changes only count once the bo
 ## Issue #67 (API 400 message on Overview and Products)
 - Overview and Products now show the API's reason ("API answered 400 for /indicators/order-size: from must be a real date, YYYY-MM-DD") instead of "the API did not answer", like Waves and Zones. `attempt()` (`app/lib/attempt.ts`) and `ApiProblem` (`app/components/ApiProblem.tsx`) are shared; Waves uses them too. Still generic: the data-quality panel and the "Comparison unavailable" line.
 - Checked against a fake API that answers 400 (`/?from=garbage`, `/products?from=garbage`); typecheck and eslint clean.
+
+## Unclosed CSS rule fixed (issue #66)
+- PR #72 merged. The closing `}` of `#drill-title ~ h4, .card h4` in `apps/web/app/globals.css` was lost in merge commit 4f189be (#18 into the waves page branch). The fix adds that brace and a blank line only. Both merge parents were compared with the fixed file: no non-blank line is missing.
+- Checked: `npm run lint` and `npm run build`; built CSS has `.wave-table`, `.pager`, `.scroll-table`, `.wave-lists`, `.item-list` as top-level rules; ran the README steps (throwaway Postgres on port 5566 instead of Docker, local CSV copy, ETL counts as in the data profile, API, `next start`) and looked at headless Chrome screenshots of `/waves` and `/waves/36611`: cell padding, underlined wave links, orders list cut at its box, two lists side by side.
+- Not checked: sticky header while scrolling, pager links (below the fold in the screenshot), computed styles in dev tools. The issue did not name an owner in its body.
+- Next: #67, #68. The throwaway cluster and CSV copy were removed.
+
