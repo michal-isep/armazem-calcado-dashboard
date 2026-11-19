@@ -158,3 +158,73 @@ export const getMonthlyTrend = (f: FilterValues) =>
 // Whole files: the filters do not apply.
 export const getDataQuality = () =>
   get<DataQuality>('/indicators/data-quality');
+
+// Products page (M1, X4, sizes). These take the ABC basis and thresholds too.
+export interface AbcReference {
+  reference: string;
+  rank: number;
+  abcClass: 'A' | 'B' | 'C';
+  lines: number;
+  units: number;
+  sharePercent: number;
+  cumulativeBeforePercent: number;
+}
+
+export interface AbcClassSummary {
+  abcClass: 'A' | 'B' | 'C';
+  references: number;
+  lines: number;
+  units: number;
+  sharePercent: number;
+}
+
+export interface Abc {
+  source: 'Customer_Order';
+  basis: 'lines' | 'units';
+  thresholds: { a: number; b: number };
+  ranked: { references: number; lines: number; units: number };
+  classes: AbcClassSummary[];
+  references: AbcReference[];
+}
+
+export interface AbcComparison {
+  source: string;
+  abccodNote: string;
+  notRankedNote: string;
+  summary: {
+    products: number;
+    compared: number;
+    matches: number;
+    mismatches: number;
+    notRanked: number;
+    matchPercent: number | null;
+  };
+  references: {
+    reference: string;
+    computedClass: 'A' | 'B' | 'C' | null;
+    abccod: string;
+    status: 'match' | 'mismatch' | 'not-ranked';
+    rank: number | null;
+    lines: number;
+    units: number;
+  }[];
+}
+
+export interface AbcSizes {
+  source: 'Customer_Order';
+  reference: string;
+  basis: 'lines' | 'units';
+  lines: number;
+  units: number;
+  sizes: { size: string; lines: number; units: number; sharePercent: number }[];
+}
+
+export const getAbc = (query: string) =>
+  get<Abc & { filters: FilterReport }>('/indicators/abc', query);
+export const getAbcComparison = (query: string) =>
+  get<AbcComparison & { filters: FilterReport }>(
+    '/indicators/abc-comparison',
+    query,
+  );
+export const getAbcSizes = (query: string) =>
+  get<AbcSizes & { filters: FilterReport }>('/indicators/abc/sizes', query);
