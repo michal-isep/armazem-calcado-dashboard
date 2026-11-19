@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
+import { FilterBarLoader } from "./components/FilterBarLoader";
+import { NavLinks } from "./components/NavLinks";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,7 +23,18 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <header className="shell">
+          <h1>Warehouse operations dashboard</h1>
+          <Suspense fallback={<div className="nav">Loading navigation...</div>}>
+            <NavLinks />
+          </Suspense>
+          <Suspense fallback={<p>Loading filters...</p>}>
+            <FilterBarLoader />
+          </Suspense>
+        </header>
+        <main className="content">{children}</main>
+      </body>
     </html>
   );
 }
