@@ -8,6 +8,13 @@ export class DatabaseService implements OnModuleDestroy {
     connectionTimeoutMillis: 3000,
   });
 
+  async query<T extends pg.QueryResultRow>(
+    text: string,
+    params: unknown[] = [],
+  ): Promise<T[]> {
+    return (await this.pool.query<T>(text, params)).rows;
+  }
+
   async ping(): Promise<void> {
     await this.pool.query('SELECT 1');
   }
