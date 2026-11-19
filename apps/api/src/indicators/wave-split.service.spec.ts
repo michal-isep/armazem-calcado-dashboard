@@ -1,10 +1,18 @@
 import { DatabaseService } from '../database.service.js';
-import { parseOrderFilters } from './filters.js';
+import { AbcService } from '../abc/abc.service.js';
+import { parseFilters } from '../filters/filters.js';
+const abc = {
+  referencesInClass: async () => undefined,
+} as unknown as AbcService;
+const defaults = { basis: 'lines' as const, thresholds: { a: 80, b: 95 } };
 import { WaveSplitService } from './wave-split.service.js';
 
 function serviceReturning(row: Record<string, number>) {
   const query = vi.fn().mockResolvedValue({ rows: [row] });
-  const service = new WaveSplitService({ query } as unknown as DatabaseService);
+  const service = new WaveSplitService(
+    { query } as unknown as DatabaseService,
+    abc,
+  );
   return { service, query };
 }
 
@@ -17,7 +25,7 @@ describe('WaveSplitService', () => {
       pairs: 3,
       split_orders: 1,
     });
-    const result = await service.compute(parseOrderFilters({}));
+    const result = await service.compute(parseFilters({}), defaults);
     expect(result).toMatchObject({
       source: 'Customer_Order',
       orders: 3,
@@ -38,7 +46,7 @@ describe('WaveSplitService', () => {
       pairs: 0,
       split_orders: 0,
     });
-    const result = await service.compute(parseOrderFilters({}));
+    const result = await service.compute(parseFilters({}), defaults);
     expect(result.m3AverageOrdersPerWave).toBeNull();
     expect(result.x2SplitOrdersPercent).toBeNull();
   });
@@ -52,7 +60,8 @@ describe('WaveSplitService', () => {
       split_orders: 0,
     });
     await service.compute(
-      parseOrderFilters({ from: '2023-01-05', reference: 'A' }),
+      parseFilters({ from: '2023-01-05', reference: 'A' }),
+      defaults,
     );
     expect(query.mock.calls[0][1]).toEqual(['2023-01-05', 'A']);
   });

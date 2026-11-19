@@ -6,15 +6,13 @@ import { AisleService } from './aisle.service.js';
 
 function setup(pickRows: unknown[]) {
   const query = vi.fn().mockResolvedValue({ rows: pickRows });
-  const compute = vi.fn().mockResolvedValue({
-    references: [
-      { reference: 'P', abcClass: 'A' },
-      { reference: 'T', abcClass: 'C' },
-    ],
-  });
+  const compute = vi.fn().mockResolvedValue([
+    { reference: 'P', abcClass: 'A' },
+    { reference: 'T', abcClass: 'C' },
+  ]);
   const service = new AisleService(
     { query } as unknown as DatabaseService,
-    { compute } as unknown as AbcService,
+    { rank: compute } as unknown as AbcService,
   );
   return { service, query, compute };
 }
@@ -57,8 +55,7 @@ describe('AisleService', () => {
     );
     expect(compute).toHaveBeenCalledWith(
       { from: '2023-01-05', to: '2023-01-31', excludeDuplicates: true },
-      'units',
-      { a: 70, b: 90 },
+      { basis: 'units', thresholds: { a: 70, b: 90 } },
     );
   });
 

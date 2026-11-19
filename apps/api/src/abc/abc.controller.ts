@@ -1,8 +1,8 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { QueryFilters } from '../filters/query-filters.decorator.js';
 import type { Filters } from '../filters/filters.js';
-import { AbcParamError, parseAbcParams } from './abc.js';
-import { AbcService, type AbcResult } from './abc.service.js';
+import { QueryAbcParams } from './abc-params.decorator.js';
+import { AbcService, type AbcParams, type AbcResult } from './abc.service.js';
 
 @Controller('indicators')
 export class AbcController {
@@ -13,16 +13,8 @@ export class AbcController {
   @Get('abc')
   async getAbc(
     @QueryFilters() filters: Filters,
-    @Query() query: Record<string, unknown>,
+    @QueryAbcParams() abc: AbcParams,
   ): Promise<AbcResult> {
-    try {
-      const { basis, thresholds } = parseAbcParams(query);
-      return await this.abc.compute(filters, basis, thresholds);
-    } catch (error) {
-      if (error instanceof AbcParamError) {
-        throw new BadRequestException(error.message);
-      }
-      throw error;
-    }
+    return this.abc.compute(filters, abc);
   }
 }

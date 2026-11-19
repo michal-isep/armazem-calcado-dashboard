@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
+import { AbcService, type AbcParams } from '../abc/abc.service.js';
 import {
-  OrderFilters,
-  describeOrderFilters,
-  orderFilterSql,
-} from './filters.js';
-import type { FilterReport } from '../filters/filters.js';
+  buildWhere,
+  describeFilters,
+  type FilterReport,
+  type Filters,
+} from '../filters/filters.js';
 
 // Ratio indicators with the counts behind them (spec section 5: trend charts
 // show only M2, M3, X1 and X2; counts and units go in the tooltip). Ratios
@@ -110,14 +111,17 @@ function indicators(row: Omit<Row, 'period'>): PeriodIndicators {
 
 @Injectable()
 export class MonthlyTrendService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly abc: AbcService,
+  ) {}
 
-  async compute(filters: OrderFilters): Promise<MonthlyTrend> {
+  async compute(filters: Filters, abcParams: AbcParams): Promise<MonthlyTrend> {
     const dataRange = await this.dataRange();
     if (!dataRange) {
       return {
         source: 'Customer_Order',
-        filters: describeOrderFilters(filters),
+        filters: describeFilters(filters, 'customer_order'),
         dataRange: null,
         months: [],
         period: null,
@@ -136,9 +140,12 @@ export class MonthlyTrendService {
     const to = filters.to ?? dataRange.to;
     const days = daysBetween(from, to);
 
+    // The class comes from the selected range and stays fixed for the months
+    // and the comparison period, so a reference keeps its class across them.
+    const abcReferences = await this.abc.referencesInClass(filters, abcParams);
     const [byMonth, current] = await Promise.all([
-      this.aggregate(filters, true),
-      this.aggregate(filters, false),
+      this.aggregate(filters, true, abcReferences),
+      this.aggregate(filters, false, abcReferences),
     ]);
     const monthRows = new Map(byMonth.map((row) => [row.period, row]));
 
@@ -170,20 +177,27 @@ export class MonthlyTrendService {
 
     return {
       source: 'Customer_Order',
-      filters: describeOrderFilters(filters),
+      filters: describeFilters(filters, 'customer_order'),
       dataRange,
       months,
       period: { from, to, days },
       current: indicators(current[0] ?? EMPTY_ROW),
-      comparison: await this.compare(filters, from, days, dataRange.from),
+      comparison: await this.compare(
+        filters,
+        from,
+        days,
+        dataRange.from,
+        abcReferences,
+      ),
     };
   }
 
   private async compare(
-    filters: OrderFilters,
+    filters: Filters,
     from: string,
     days: number,
     dataStart: string,
+    abcReferences: string[] | undefined,
   ): Promise<MonthlyTrend['comparison']> {
     const previousTo = toDate(toTime(from) - DAY_MS);
     const previousFrom = toDate(toTime(from) - days * DAY_MS);
@@ -199,6 +213,7 @@ export class MonthlyTrendService {
     const rows = await this.aggregate(
       { ...filters, from: previousFrom, to: previousTo },
       false,
+      abcReferences,
     );
     const previous = indicators(rows[0] ?? EMPTY_ROW);
     if (previous.orders === 0) return noData('no-matching-orders');
@@ -227,16 +242,19 @@ export class MonthlyTrendService {
   // Counts per calendar month (YYYY-MM) or, without byMonth, one row for the
   // whole filtered range. An order is counted in the month of its created_at.
   private async aggregate(
-    filters: OrderFilters,
+    filters: Filters,
     byMonth: boolean,
+    abcReferences: string[] | undefined,
   ): Promise<Row[]> {
-    const { where, params } = orderFilterSql(filters);
+    const { sql, params } = buildWhere(filters, 'customer_order', {
+      abcReferences,
+    });
     const period = byMonth ? "to_char(created_at, 'YYYY-MM')" : "'all'";
     const { rows } = await this.database.query<Row>(
       `WITH filtered AS (
          SELECT ${period} AS period, order_number, wave_number, quantity
            FROM customer_order_line
-          WHERE ${where}),
+          ${sql}),
        per_order AS (
          SELECT period, order_number, count(DISTINCT wave_number) AS order_waves
            FROM filtered

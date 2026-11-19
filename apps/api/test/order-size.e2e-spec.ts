@@ -78,13 +78,14 @@ describe.skipIf(!url)('M2 and X1 (fixture from spec section 8)', () => {
 
   it('applies customer and operator and reports the filters it did not apply', async () => {
     const { body } = await get(
-      '?customer=C3&operator=Op2&aisle=H&abcClass=A',
+      '?customer=C3&operator=Op2&aisle=H&abcClass=B',
     ).expect(200);
+    // C is class B here (lines A 3, B 1, C 1), so the class keeps C3's line.
     expect(body).toMatchObject({ orders: 1, lines: 1, units: 4 });
-    expect(body.filters.applied).toEqual(['operator', 'customer']);
+    expect(body.filters.applied).toEqual(['abcClass', 'operator', 'customer']);
     expect(
       body.filters.notApplied.map((n: { filter: string }) => n.filter),
-    ).toEqual(['aisle', 'abcClass']);
+    ).toEqual(['aisle']);
   });
 
   it('returns nulls for an empty result and 400 for bad input', async () => {

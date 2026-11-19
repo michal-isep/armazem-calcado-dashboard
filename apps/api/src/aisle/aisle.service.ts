@@ -41,18 +41,15 @@ export class AisleService {
   ): Promise<AisleResult> {
     // The class comes from the date range only (ADR 0002): reference, customer,
     // operator, aisle and abcClass select picks, they never change a class.
-    const ranking = await this.abc.compute(
+    const ranking = await this.abc.rank(
       {
         from: filters.from,
         to: filters.to,
         excludeDuplicates: filters.excludeDuplicates,
       },
-      basis,
-      thresholds,
+      { basis, thresholds },
     );
-    const classOf = new Map(
-      ranking.references.map((r) => [r.reference, r.abcClass]),
-    );
+    const classOf = new Map(ranking.map((r) => [r.reference, r.abcClass]));
 
     // Picks selected by wave start, reference, operator and aisle.
     const where = buildWhere(filters, 'picking_wave');
