@@ -4,6 +4,7 @@ import {
   checkUnits,
   groupOrders,
   notAppliedFilters,
+  parseListParams,
   parseWaveNumber,
   type OrderLineRow,
 } from './waves.js';
@@ -113,5 +114,47 @@ describe('notAppliedFilters', () => {
 
   it('is empty when no other filter is set', () => {
     expect(notAppliedFilters(parseFilters({}))).toEqual([]);
+  });
+});
+
+describe('parseListParams', () => {
+  it('has defaults', () => {
+    expect(parseListParams({})).toEqual({
+      page: 1,
+      pageSize: 50,
+      sort: 'waveNumber',
+      order: 'asc',
+    });
+  });
+
+  it('reads valid values and treats empty as absent', () => {
+    expect(
+      parseListParams({
+        page: '3',
+        pageSize: '200',
+        sort: 'firstCreatedAt',
+        order: 'desc',
+      }),
+    ).toEqual({
+      page: 3,
+      pageSize: 200,
+      sort: 'firstCreatedAt',
+      order: 'desc',
+    });
+    expect(parseListParams({ page: '', sort: '' }).page).toBe(1);
+  });
+
+  it.each([
+    { page: '0' },
+    { page: '-1' },
+    { page: '1.5' },
+    { page: 'abc' },
+    { pageSize: '0' },
+    { pageSize: '201' },
+    { sort: 'units' },
+    { order: 'up' },
+    { page: ['1', '2'] },
+  ])('rejects %j', (query) => {
+    expect(() => parseListParams(query)).toThrow(WaveParamError);
   });
 });
