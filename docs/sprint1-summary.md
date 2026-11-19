@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #16).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #7).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -126,3 +126,10 @@ The owner is written in each issue body, so these changes only count once the bo
 - No web tests yet (no runner in the scaffold); not added because it was not requested.
 - Co-author on the commits: Paola, with `1260244@isep.ipp.pt` (derived from her ISEP number, confirm it).
 - Next: #7 (M1 ABC API). Per CLAUDE.md rule 6, start by adding the ABC class filter to `apps/api/src/indicators/filters.ts` and to the #8, #9, #10, #14 endpoints. Then #18 (Products page, needs #7) and #17 (Overview, needs #7 and the other APIs), which can now use the shell.
+
+## M1 ABC API (issue #7, Michal)
+- `GET /indicators/abc` takes the global filters plus `basis` (`lines` default, or `units`), `thresholdA`, `thresholdB` (default 80/95, must satisfy 0 < A < B <= 100; bad input gives 400). Code in `apps/api/src/abc/`: `abc.ts` (pure `classify`, `parseAbcParams`), `abc.service.ts`, `abc.controller.ts`. Uses the new `src/filters/` (`@QueryFilters()`, `buildWhere`, `describeFilters`), not Federico's `src/indicators/filters.ts`.
+- ABC is computed with `buildWhere(..., { scope: 'dateOnly' })` (date range, valid lines, duplicates toggle). Then `reference`, `customer`, `operator` and `abcClass` only select from the ranking (ADR 0002); a second query finds references with a line matching reference/customer/operator. Aisle is reported in `filters.notApplied`.
+- Response: `basis`, `thresholds`, `filters`, `ranked` (references, lines, units behind the ranking), `classes` (per class over the selected references), `references` (rank, class, lines, units, `sharePercent`, `cumulativeBeforePercent`; from the full ranking). Empty range gives empty lists, no error.
+- Tests: `abc.spec.ts` (unit: spec fixture 1 on both bases, fixture 2, thresholds, params) and `test/abc.e2e-spec.ts` (fixture 2 through the API: scoping test reference = T stays C, customer/operator scoping, abcClass = A gives P, Q, R, date-range-only, units basis, 400s). Throwaway Postgres 17 container (`abc7-pg`, trust auth, port 5640), stopped. All 8 e2e files pass together. Real data via the API: lines 49/53/106, units 51/49/108, as in the decisions above.
+- Next: per CLAUDE.md rule 6, add the ABC class filter to `apps/api/src/indicators/filters.ts` and the #8, #9, #10, #14 endpoints (or move them to `src/filters/`, see the duplicate-code note under #13). Then #12 (X4), #18 (Products page), #17 (Overview).
