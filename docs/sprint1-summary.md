@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20, #24, #22 and #23).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20, #24, #25, #22 and #23).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -228,7 +228,7 @@ The owner is written in each issue body, so these changes only count once the bo
 - Also replaced stale text: the Overview M1 card said "Not available yet ... issue #7" and the data quality panel said "M1 will join this comparison when issue #7 lands"; #7 is merged. The M1 card still shows no class counts (only a pointer to Products); a counts card is left to #17's owner if wanted.
 - Wording search (save, reduce, improve, expected, will, potential, optimise, forecast, cost, ...) over the web and API text: no forecast or saving wording. The only hit was the "will join" sentence above.
 - Verified: `npm run lint`, `npx tsc --noEmit`, `npm run build`. **Not run: real database, browser, rendered HTML** (the period note needs the API, so it was not seen rendered).
-- Next for Leo: #25. Then #22, #23.
+- Next for Leo: #25 (done). Then #23.
 
 ## Indicator validation (issue #22)
 - `docs/validation/validate_indicators.py` recomputes M1-M5, X1-X4, A1 and the monthly trend from the CSVs with pandas and compares with the API over 20 scenarios (both bases, duplicates on/off, date ranges, reference, abcClass, thresholds, customer, operator, aisle, empty range). Report: `docs/validation/report.md`.
@@ -236,9 +236,14 @@ The owner is written in each issue body, so these changes only count once the bo
 - Not covered: abc/sizes, wave list and detail, filters/options, web pages (#23, #24). The script follows the same written rules as the API, so it finds implementation errors, not wrong rules.
 - Next: #25 (README), #23 (manual test plan and run).
 
+## README run instructions (issue #25, Leo)
+- `README.md` "Run locally" is rewritten in seven steps: prerequisites, environment variables (every name in `.env.example` with the service that uses it), database, CSV placement (`Customer_Order.csv`, `Picking_Wave.csv`, `Product.csv` in `data/`, local only, ADR 0007), ETL (`cd apps/api && npm run etl`, `DATA_DIR` or `-- <folder>`, re-runnable, the printed counts), API (`GET /health`), web app (http://localhost:3000), plus a troubleshooting list. The "Full instructions will be completed in issue #25" line is removed. The rest of the README is unchanged (the Layout line still says `apps/` was "created during the workshop").
+- Everything was taken from the code. Findings: Compose reads `.env` but the API, ETL and web do not, so the variables must be exported in each shell; a missing CSV gives a raw Node `ENOENT` stack trace (no `ETL failed:` line), `Product.csv` is read first; `API_URL` must have no trailing slash. These are documented, not changed.
+- Verified: `npm install` and `npm run build` in `apps/api` and `apps/web`; the ETL twice on the real CSVs into a throwaway Postgres 17 (counts as in the data profile, identical on both runs, CSV checksums unchanged); ETL with `DATABASE_URL` unset and with a folder without CSVs; API `/health` 200; web Overview served with the API up. **Not run: `docker compose config`/`up` (Docker is not installed on this machine), a browser, the "unavailable" pages with the API stopped, `/health` 503.** The throwaway cluster was stopped and removed.
+- Next: #23 (manual test plan and run); someone with Docker should follow the README once from a clean clone.
+
 ## Manual test plan and run (issue #23)
 - `docs/test-plan.md`: 94 cases run in headless Chrome (puppeteer-core, scripts outside the repo) against the real data on a throwaway Postgres 17 (port 5700, removed) with the API and `next start`: 89 pass, 3 fail, 2 observations. It covers every page, each filter, empty result, partial months and tooltips, comparison before the data start, thresholds and basis, the duplicates toggle, drill-down, the data quality panel, the wave list pager and sort, the wave detail, and the limitations. First time the client interactions (`router.replace`, pager, sort, AbcControls, tooltips, details) were clicked in a real browser. Not covered: native date picker and datalist popups, other browsers, small screens.
 - Defects found (needs-triage, not fixed here): #66 unclosed CSS rule at `globals.css:382` (lost in the #18/#19 merge) so wave table, pager, scroll box and sticky header are unstyled; #67 Overview and Products say "API did not answer" for a 400; #68 Zones badge repeats "meaning unknown".
 - Observations: filter changes use `router.replace`, so Back leaves the page; the filter-bar Reset also clears ABC basis and thresholds.
-- Next: fix #66 first (visible on /waves and /waves/<n>), then #67, #68; #25 (README); #26 (teacher questions). The sprint1 board was not read (token lacks `read:project`).
-
+- Next: fix #66 first (visible on /waves and /waves/<n>), then #67, #68; #26 (teacher questions). The sprint1 board was not read (token lacks `read:project`).

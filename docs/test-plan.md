@@ -127,4 +127,4 @@ L01 to L07 repeat the #24 table in the browser: all present, no forecast or savi
 - The pager, sort, filter bar, thresholds, tooltips and details were clicked (W02-W07, F01-F10, T01-T11, M02-M06, V02), which earlier sessions could not do.
 
 ## Is the project done?
-Not yet. Open on the tracker: #25 (README run instructions) and #26 (the two questions for the teacher, which also decide whether the wave detail view counts as a page), plus the three defects above (#66 matters most: it makes the wave pages look broken). The sprint board could not be read (the token lacks `read:project`). Everything else in the spec is built, validated (3,647 checks, 0 differences) and now manually tested.
+Not yet. Open on the tracker: #26 (the two questions for the teacher, which also decide whether the wave detail view counts as a page), plus the three defects above (#66 matters most: it makes the wave pages look broken). The sprint board could not be read (the token lacks `read:project`). Everything else in the spec is built, validated (3,647 checks, 0 differences) and now manually tested.
