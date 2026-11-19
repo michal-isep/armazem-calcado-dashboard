@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #8).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #9).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -82,3 +82,10 @@ The owner is written in each issue body, so these changes only count once the bo
 - Not done: the ABC class filter, because it needs the computed ABC from M1 (#7). Customer and operator filters are not added.
 - Tests: `filters.spec.ts` (unit) and `test/order-size.e2e-spec.ts` (spec section 8 fixture; needs `TEST_DATABASE_URL`, it recreates `customer_order_line`). Ran the e2e on a throwaway Postgres with trust auth on port 5588, then removed it.
 - Next for Federico: #9, #10, #14, #17.
+
+## M3 and X2 API (issue #9, Federico)
+- `GET /indicators/wave-split` returns M3 (`m3AverageOrdersPerWave` = distinct (wave, order) pairs / distinct waves) and X2 (`x2SplitOrdersPercent` = orders in more than one wave / orders, as a percentage 0-100), with `orders`, `waves`, `lines`, `waveOrderPairs`, `splitOrders`, `source: "Customer_Order"` and the filters applied. Both are `null` when no order matches. Code: `apps/api/src/indicators/wave-split.service.ts`, same filters as #8 (`parseOrderFilters`, `orderFilterSql`). The ABC class filter is still missing (needs #7).
+- Tests: `wave-split.service.spec.ts` (unit, mocked database) and `test/wave-split.e2e-spec.ts` (spec section 8 fixture gives M3 = 1.5, X2 = 0; a February order split over two waves tests X2). Ran the e2e on a throwaway Postgres with trust auth on port 5599, then removed it.
+- The e2e files recreate the same tables, so `vitest.config.e2e.ts` now sets `fileParallelism: false`; before this, running all e2e files at once could make them overwrite each other's fixture.
+- Paola is listed as co-author of the commits in the issue body; the commit has no co-author trailer because her git email is unknown. Add it if she wants it.
+- Next for Federico: #10, #14, #17.
