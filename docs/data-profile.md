@@ -59,5 +59,12 @@ Meaning not documented. They stay in their own bucket (spec, A1).
 ## Consequences for the indicators
 1. **Sector share and multi-sector orders cannot distinguish anything**: 100% of units are `PF`, and 0% of orders are multi-sector.
    The dashboard must show this honestly and offer a clearly labelled proxy (picking aisle/zone) as a separate, additional view.
-2. **Our ABC differs from `Product.ABCCOD`**: computed from orders with the 80/95 rule it gives A 51, B 49, C 108, and only 112 of 208 references get the same class as `ABCCOD`.
+2. **Our ABC differs from `Product.ABCCOD`** (A 44, B 70, C 94). Computed with the 80/95 rule on valid order lines (quantity 0 excluded, duplicates kept), by script on the original files:
+
+   | Basis | A | B | C | Same class as `ABCCOD` |
+   |---|---|---|---|---|
+   | **Order lines (default)**, 122,337 lines | 49 | 53 | 106 | 121 of 208 |
+   | Units (alternative), 228,195 units | 51 | 49 | 108 | 112 of 208 |
+
+   The units-basis row is the figure originally reported here, before the line basis was chosen (ADR 0001).
    We must say which one the dashboard uses and show the disagreement.
