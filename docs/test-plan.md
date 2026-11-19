@@ -128,3 +128,7 @@ L01 to L07 repeat the #24 table in the browser: all present, no forecast or savi
 
 ## Is the project done?
 Not yet. Open on the tracker: #26 (the two questions for the teacher, which also decide whether the wave detail view counts as a page), plus the three defects above (#66 matters most: it makes the wave pages look broken). The sprint board could not be read (the token lacks `read:project`). Everything else in the spec is built, validated (3,647 checks, 0 differences) and now manually tested.
+
+## Recheck after fixes
+- 2026-11-19, V03 (defect #66): fixed by PR #72. Rechecked by building `apps/web`, confirming the built CSS has `.wave-table`, `.pager`, `.scroll-table`, `.wave-lists` and `.item-list` as top-level rules, and looking at headless Chrome screenshots of `/waves` and `/waves/36611` on the real data (cell padding, underlined links, orders list cut at its scroll box, two lists side by side). The sticky header while scrolling was not rechecked. The original FAIL result above is unchanged.
+
