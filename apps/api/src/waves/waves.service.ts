@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database.service.js';
-import { buildWhere, type Filters } from '../filters/filters.js';
+import { AbcService, type AbcParams } from '../abc/abc.service.js';
+import {
+  buildWhere,
+  describeFilters,
+  type FilterReport,
+  type Filters,
+} from '../filters/filters.js';
 import {
   COVERAGE_NOTE,
   NO_LINK_NOTE,
@@ -13,6 +19,8 @@ import {
   type OrderLineRow,
   type PickEntry,
   type UnitCheck,
+  type WaveListEntry,
+  type WaveListParams,
 } from './waves.js';
 
 export interface WaveDetail {
@@ -43,9 +51,80 @@ export interface WaveDetail {
   };
 }
 
+export interface WaveList {
+  source: typeof ORDERS_SOURCE;
+  filters: FilterReport;
+  /** Waves matching the filters, over all pages. */
+  total: number;
+  page: number;
+  pageSize: number;
+  sort: WaveListParams['sort'];
+  order: WaveListParams['order'];
+  waves: WaveListEntry[];
+  note: string;
+}
+
 @Injectable()
 export class WavesService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly abc: AbcService,
+  ) {}
+
+  // Waves of Customer_Order with their orders, lines, units and creation date
+  // range, on the shared filters. A page past the end gives an empty list.
+  async list(
+    filters: Filters,
+    abcParams: AbcParams,
+    params: WaveListParams,
+  ): Promise<WaveList> {
+    const abcReferences = await this.abc.referencesInClass(filters, abcParams);
+    const { sql, params: values } = buildWhere(filters, 'customer_order', {
+      abcReferences,
+    });
+    const dir = params.order === 'desc' ? 'DESC' : 'ASC';
+    // wave_number is text; shorter first keeps numeric order. Ties by wave.
+    const byWave = `length(wave_number) ${dir}, wave_number ${dir}`;
+    const orderBy =
+      params.sort === 'firstCreatedAt'
+        ? `first_created_at ${dir}, ${byWave}`
+        : byWave;
+    const grouped = `SELECT wave_number,
+                count(DISTINCT order_number)::int AS orders,
+                count(*)::int AS lines,
+                sum(quantity)::int AS units,
+                min(created_at) AS first_created_at,
+                max(created_at) AS last_created_at
+           FROM customer_order_line
+          ${sql}
+          GROUP BY wave_number`;
+    const [count, page] = await Promise.all([
+      this.database.query<{ total: number }>(
+        `SELECT count(*)::int AS total FROM (${grouped}) w`,
+        values,
+      ),
+      this.database.query<WaveListEntry>(
+        `SELECT wave_number AS "waveNumber", orders, lines, units,
+                to_char(first_created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS "firstCreatedAt",
+                to_char(last_created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS "lastCreatedAt"
+           FROM (${grouped}) w
+          ORDER BY ${orderBy}
+          LIMIT ${params.pageSize} OFFSET ${(params.page - 1) * params.pageSize}`,
+        values,
+      ),
+    ]);
+    return {
+      source: ORDERS_SOURCE,
+      filters: describeFilters(filters, 'customer_order'),
+      total: count.rows[0].total,
+      page: params.page,
+      pageSize: params.pageSize,
+      sort: params.sort,
+      order: params.order,
+      waves: page.rows,
+      note: 'Orders, lines and units come from Customer_Order only. Picks are not tied to orders (ADR 0005) and the files are not reconciled (ADR 0004), so picks are not listed here.',
+    };
+  }
 
   async detail(waveNumber: string, filters: Filters): Promise<WaveDetail> {
     // Only the duplicates toggle applies to a single wave (ADR 0003).

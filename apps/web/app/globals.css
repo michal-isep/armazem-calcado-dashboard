@@ -276,3 +276,31 @@ a {
 .quality a {
   text-decoration: underline;
 }
+
+.wave-table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.wave-table th,
+.wave-table td {
+  text-align: left;
+  padding: 0.2rem 1.5rem 0.2rem 0;
+}
+
+.wave-table a,
+.pager a {
+  text-decoration: underline;
+}
+
+.pager {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.pager .greyed {
+  opacity: 0.55;
+}

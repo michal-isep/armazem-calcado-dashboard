@@ -40,7 +40,18 @@ async function get<T>(path: string, query = ''): Promise<T> {
     throw new ApiError('API unreachable');
   }
   if (!res.ok) {
-    throw new ApiError(`API answered ${res.status} for ${path}`, res.status);
+    // Nest puts the reason in `message`; keep it so the page can show it.
+    let reason = '';
+    try {
+      const body = (await res.json()) as { message?: unknown };
+      if (typeof body.message === 'string') reason = `: ${body.message}`;
+    } catch {
+      // Not JSON; the status is enough.
+    }
+    throw new ApiError(
+      `API answered ${res.status} for ${path}${reason}`,
+      res.status,
+    );
   }
   return (await res.json()) as T;
 }
@@ -158,3 +169,39 @@ export const getMonthlyTrend = (f: FilterValues) =>
 // Whole files: the filters do not apply.
 export const getDataQuality = () =>
   get<DataQuality>('/indicators/data-quality');
+
+export interface WaveListEntry {
+  waveNumber: string;
+  orders: number;
+  lines: number;
+  units: number;
+  firstCreatedAt: string; // YYYY-MM-DDTHH:MM:SS
+  lastCreatedAt: string;
+}
+
+export interface WaveList {
+  source: 'Customer_Order';
+  filters: FilterReport;
+  total: number;
+  page: number;
+  pageSize: number;
+  sort: 'waveNumber' | 'firstCreatedAt';
+  order: 'asc' | 'desc';
+  waves: WaveListEntry[];
+  note: string;
+}
+
+/** Paging values as given in the URL; the API validates them (400). */
+export interface WavePaging {
+  page?: string;
+  sort?: string;
+  order?: string;
+}
+
+export function getWaveList(filters: FilterValues, paging: WavePaging) {
+  const q = new URLSearchParams(filtersToQuery(filters));
+  for (const [name, value] of Object.entries(paging)) {
+    if (value) q.set(name, value);
+  }
+  return get<WaveList>('/waves', q.toString());
+}

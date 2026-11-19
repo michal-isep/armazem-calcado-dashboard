@@ -241,4 +241,128 @@ describe.skipIf(!url)('wave detail (fixture)', () => {
     await get('10001', { excludeDuplicates: 'maybe' }).expect(400);
     await get('10001', { from: 'garbage' }).expect(400);
   });
+
+  describe('GET /waves (list)', () => {
+    const list = (query: object = {}) =>
+      request(app.getHttpServer()).get('/waves').query(query);
+    type Wave = {
+      waveNumber: string;
+      orders: number;
+      lines: number;
+      units: number;
+    };
+
+    it('lists the waves of Customer_Order with their totals', async () => {
+      const res = await list().expect(200);
+      expect(res.body).toMatchObject({
+        source: 'Customer_Order',
+        total: 2,
+        page: 1,
+        pageSize: 50,
+        sort: 'waveNumber',
+        order: 'asc',
+      });
+      // Wave 10004 has only a quantity 0 line, and 10003 is picks only.
+      expect(res.body.waves).toEqual([
+        {
+          waveNumber: '10001',
+          orders: 2,
+          lines: 4,
+          units: 6,
+          firstCreatedAt: '2023-01-05T08:00:00',
+          lastCreatedAt: '2023-01-05T08:00:00',
+        },
+        {
+          waveNumber: '10002',
+          orders: 1,
+          lines: 1,
+          units: 4,
+          firstCreatedAt: '2023-01-05T08:00:00',
+          lastCreatedAt: '2023-01-05T08:00:00',
+        },
+      ]);
+    });
+
+    it('excludes exact duplicates only when asked', async () => {
+      const res = await list({ excludeDuplicates: 'true' }).expect(200);
+      expect((res.body.waves as Wave[])[0]).toMatchObject({
+        waveNumber: '10001',
+        lines: 3,
+        units: 4,
+      });
+      expect(res.body.filters.excludeDuplicates.applied).toBe(true);
+    });
+
+    it('pages and sorts, and an empty page past the end is not an error', async () => {
+      const second = await list({ pageSize: 1, page: 2 }).expect(200);
+      expect(second.body.total).toBe(2);
+      expect((second.body.waves as Wave[]).map((w) => w.waveNumber)).toEqual([
+        '10002',
+      ]);
+      const past = await list({ pageSize: 1, page: 3 }).expect(200);
+      expect(past.body.total).toBe(2);
+      expect(past.body.waves).toEqual([]);
+      const desc = await list({ order: 'desc' }).expect(200);
+      expect((desc.body.waves as Wave[]).map((w) => w.waveNumber)).toEqual([
+        '10002',
+        '10001',
+      ]);
+      const byDate = await list({ sort: 'firstCreatedAt' }).expect(200);
+      expect((byDate.body.waves as Wave[]).map((w) => w.waveNumber)).toEqual([
+        '10001',
+        '10002',
+      ]);
+    });
+
+    it('applies reference, customer, operator, dates and abcClass', async () => {
+      const ref = await list({ reference: 'A' }).expect(200);
+      expect(ref.body.waves).toHaveLength(1);
+      expect(ref.body.waves[0]).toMatchObject({
+        waveNumber: '10001',
+        lines: 3,
+      });
+      expect(ref.body.filters.applied).toEqual(['reference']);
+      const op = await list({ operator: 'Op2' }).expect(200);
+      expect(op.body.waves).toHaveLength(1);
+      expect((await list({ customer: 'nobody' }).expect(200)).body.total).toBe(
+        0,
+      );
+      expect((await list({ from: '2023-02-01' }).expect(200)).body.total).toBe(
+        0,
+      );
+      expect(
+        (await list({ from: '2023-01-05', to: '2023-01-05' }).expect(200)).body
+          .total,
+      ).toBe(2);
+      // C has only a quantity 0 line, so no reference is class C.
+      const c = await list({ abcClass: 'C' }).expect(200);
+      expect(c.body.total).toBe(0);
+      expect(c.body.waves).toEqual([]);
+      expect((await list({ abcClass: 'A' }).expect(200)).body.total).toBe(2);
+    });
+
+    it('reports filters that do not apply instead of ignoring them', async () => {
+      const res = await list({ aisle: 'H' }).expect(200);
+      expect(res.body.filters.notApplied).toEqual([
+        expect.objectContaining({ filter: 'aisle' }),
+      ]);
+      expect(res.body.total).toBe(2);
+    });
+
+    it('answers 400 for bad paging, sort or filters', async () => {
+      for (const q of [
+        { page: 0 },
+        { pageSize: 201 },
+        { pageSize: 'many' },
+        { sort: 'units' },
+        { order: 'up' },
+        { abcClass: 'D' },
+        { from: 'garbage' },
+        { excludeDuplicates: 'maybe' },
+        { thresholdA: '99', thresholdB: '50' },
+      ]) {
+        await list(q).expect(400);
+      }
+    });
+  });
 });
