@@ -3,11 +3,23 @@
   --foreground: #171717;
 }
 
+/* Dark follows the system unless the user chose Light (ThemeToggle). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --background: #0a0a0a;
     --foreground: #ededed;
+    color-scheme: dark;
   }
+}
+
+:root[data-theme='dark'] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 html {
@@ -42,10 +54,15 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+.shell-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.theme-toggle {
+  font-size: 0.85rem;
 }
 
 .shell {
