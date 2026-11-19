@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { connection } from 'next/server';
+import { CardFilters } from './components/CardFilters';
 
 async function fetchHealth(apiUrl: string): Promise<string> {
   try {
@@ -19,11 +20,20 @@ async function ApiHealth() {
 
 export default function Home() {
   return (
-    <main>
-      <h1>Warehouse operations dashboard</h1>
+    <>
+      <h2>Overview</h2>
       <Suspense fallback={<p>Checking API...</p>}>
         <ApiHealth />
       </Suspense>
-    </main>
+      <p>KPI cards, monthly trend and data quality panel: issue #17.</p>
+      <section className="card">
+        <h3>Filter check (placeholder until #17)</h3>
+        <p>How the active filters show on a card of each source file:</p>
+        <Suspense fallback={null}>
+          <CardFilters source="customer_order" />
+          <CardFilters source="picking_wave" />
+        </Suspense>
+      </section>
+    </>
   );
 }
