@@ -10,6 +10,8 @@ Project instructions for Claude Code. Spec lives in docs/. Never read or write s
 4. **Before coding:** read `docs/index.md`, `docs/spec.md` and the ADRs in `docs/adr/`. If the code would contradict one, say so before writing it.
 5. **Before the session is cleared:** update `docs/sprint1-summary.md` with what was done, what was decided and what is next.
 
+6. **ABC class filter reminder.** The indicator endpoints (#8, #9, #10, #14) lack the ABC class filter because it needs the computed ABC from issue #7 (M1). When #7 is merged, start by adding that filter to the shared filters in `apps/api/src/indicators/filters.ts` and to those endpoints, before any other work.
+
 ## Agent skills
 
 ### Issue tracker
