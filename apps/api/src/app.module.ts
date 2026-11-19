@@ -13,6 +13,8 @@ import { OrderSizeService } from './indicators/order-size.service.js';
 import { SectorService } from './indicators/sector.service.js';
 import { WaveSplitService } from './indicators/wave-split.service.js';
 import { HealthController } from './health.controller.js';
+import { WavesController } from './waves/waves.controller.js';
+import { WavesService } from './waves/waves.service.js';
 
 @Module({
   controllers: [
@@ -21,6 +23,7 @@ import { HealthController } from './health.controller.js';
     IndicatorsController,
     AbcController,
     AisleController,
+    WavesController,
   ],
   providers: [
     DatabaseService,
@@ -32,6 +35,7 @@ import { HealthController } from './health.controller.js';
     SectorService,
     MonthlyTrendService,
     DataQualityService,
+    WavesService,
   ],
 })
 export class AppModule {}
