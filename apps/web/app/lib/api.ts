@@ -338,3 +338,36 @@ export function getWaveDetail(waveNumber: string, filters: FilterValues) {
     filtersToQuery(filters),
   );
 }
+
+// Warehouse zones page (X3, A1; issue #11). Mirrors AisleResult in
+// apps/api/src/aisle/. Aisle is a proxy, never Sector (ADR 0006).
+export type PickClass = 'A' | 'B' | 'C' | 'unclassified';
+
+export interface PickCount {
+  picks: number;
+  units: number;
+}
+
+export interface AisleEntry extends PickCount {
+  aisle: string;
+  sharePercent: number | null;
+  byClass: Record<PickClass, PickCount>;
+}
+
+export interface AislePicks {
+  source: 'Picking_Wave';
+  label: string;
+  coverageNote: string;
+  abc: { basis: 'lines' | 'units'; thresholds: { a: number; b: number } };
+  totals: PickCount;
+  aisles: AisleEntry[];
+  unknownAisles: PickCount & {
+    label: string;
+    sharePercent: number | null;
+    aisles: AisleEntry[];
+  };
+  classes: (PickCount & { abcClass: PickClass; sharePercent: number | null })[];
+}
+
+export const getAislePicks = (query: string) =>
+  get<AislePicks & { filters: FilterReport }>('/indicators/aisle-picks', query);
