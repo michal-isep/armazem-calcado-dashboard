@@ -42,7 +42,7 @@ function AisleHead() {
         <th scope="col">Share of picks</th>
         {CLASSES.map((c) => (
           <th scope="col" key={c}>
-            Picks, {classLabel(c).toLowerCase()}
+            Picks, {c === 'unclassified' ? 'no class' : `class ${c}`}
           </th>
         ))}
       </tr>
@@ -120,7 +120,7 @@ async function Zones({
               <>
                 <h4>Aisles with unknown meaning</h4>
                 <p className="badge" role="note">
-                  Meaning unknown: {data.unknownAisles.label}
+                  {data.unknownAisles.label}
                 </p>
                 <table className="data">
                   <caption>
