@@ -1,6 +1,6 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #4).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issue #5).
 
 ## Project in one paragraph
 Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
@@ -63,3 +63,15 @@ Dashboard for the warehouse operations director of a footwear warehouse. The dir
 - Show a diff before saving edits when asked; do not commit or merge unless asked.
 - Never read or write secrets. `data/` is local only; the CSVs are git-ignored.
 - Scripts used so far live in `C:\Users\Admin\AppData\Local\Temp\abc_check\` (`abc_check.py`, `create_issues.sh`), outside the repo.
+
+## ETL count check (issue #5, Federico)
+- Ran the ETL on the real CSVs into a throwaway Postgres 17 cluster (Homebrew, port 5544, throwaway credentials, no `.env`), then checked two ways: SQL queries on the loaded tables and a separate Python script that reads only the raw CSVs (no ETL code). Scripts were kept outside the repo.
+- Result: no differences. Rows 122,370 / 215,192 / 208; 33 quantity-0 rows; 2,559 exact duplicates; 16 blank sizes stored as `unknown`; 32,634 distinct orders in the file, 32,632 once quantity-0 lines are excluded (also 32,632 with duplicates excluded); 228,195 order units; 215,192 pick units; Sector is `PF` for all 208 products; text fields are trimmed; order dates run 2023-01-05 to 2023-10-19.
+- Wording note for the acceptance criteria: quantity-0 rows are not deleted. They stay in `customer_order_line` with `is_valid = false` (33 rows) and every indicator must filter `is_valid`.
+- Stop the throwaway cluster with `pg_ctl -D /tmp/etl5/db stop`.
+
+## Proposed work split (Federico, 2026-11-19; not yet applied to the issue bodies)
+The owner is written in each issue body, so these changes only count once the bodies are edited.
+- Federico: #8, #9, #10, #14 (API) and #17 (Overview page). #5 is done.
+- Paola takes #22 (validate indicators independently) because it needs only the CSVs and a spreadsheet or script, not the repo, and it is more independent when written by someone who did not build the API. She also drafts the #23 test plan now from `docs/spec.md` and runs it once #17-#20 exist, and takes #24 from Leo (Leo has #6, #11, #15, #19, #20, #21, #24, #25). Paola still needs a GitHub account; until then Federico posts her results in the issues.
+- Leo keeps #6, #11, #15, #19, #20, #21, #25.
