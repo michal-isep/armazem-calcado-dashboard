@@ -12,7 +12,7 @@ export const UNKNOWN_AISLES: readonly string[] = ['C', 'E', 'Z', 'G'];
 
 export const PROXY_LABEL = 'proxy, not Sector';
 export const UNKNOWN_AISLES_LABEL =
-  'meaning unknown: the data does not say what locations in these aisles are';
+  'Meaning unknown: the data does not say what locations in these aisles are';
 export const COVERAGE_NOTE =
   'Picking_Wave covers about 94% of ordered units (77 waves of Customer_Order are missing from it). The two files are not reconciled (ADR 0004), so aisle figures are approximate.';
 
