@@ -207,3 +207,9 @@ The owner is written in each issue body, so these changes only count once the bo
 - Verified: `npm run lint`, `npm run build`, and a real run (throwaway Postgres 17, ETL, API, `next start`, read through the rendered HTML): 33168 match (24 and 24), 33170 mismatch (24 vs 23), 33219 Customer_Order only, 43175 with split order 124437 (also in wave 43174), 42035 duplicates toggle (order units 25 to 5, so mismatch +20), 99999 404, `abc` 400, `from=garbage` 400. Not tested in a real browser (collapsing, scrolling, sticky header, layout).
 - Notes: an error is shown in the page body but the HTTP status of the page is still 200 (the response streams inside Suspense), like the other pages. No wave in the real data has only quantity-0 lines, so that note was not seen on real data (covered by the API e2e test). Pick sizes come as `11.0` and order sizes as `11`; shown as the files have them. The list page link carries only the filters, so the back link returns to page 1 and the default sort.
 - Next for Leo: #20 (Warehouse zones), #24, #25. Then #22, #23.
+
+## Indicator validation (issue #22, done in the session of Federico's/Paola's task)
+- `docs/validation/validate_indicators.py` recomputes M1-M5, X1-X4, A1 and the monthly trend from the CSVs with pandas and compares with the API over 20 scenarios (both bases, duplicates on/off, date ranges, reference, abcClass, thresholds, customer, operator, aisle, empty range). Report: `docs/validation/report.md`.
+- Result: 3,647 checks, 0 differences. Run: `python docs/validation/validate_indicators.py --data-dir data --api http://localhost:3001` (API on a database loaded by the ETL). Throwaway Postgres container `val22-pg` (port 5690) was removed.
+- Not covered: abc/sizes, wave list and detail, filters/options, web pages (#23, #24). The script follows the same written rules as the API, so it finds implementation errors, not wrong rules.
+- Next: #20, #21, #23, #24, #25.
