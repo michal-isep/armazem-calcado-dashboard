@@ -81,9 +81,7 @@ export function DataQualityPanel(props: {
           ) : (
             <p className="error">Duplicate comparison unavailable.</p>
           )}
-          <p className="note">
-            M1 will join this comparison when issue #7 lands.
-          </p>
+          <p className="note">M1 (ABC) is not part of this comparison.</p>
 
           <h4>The two source files disagree</h4>
           <p className="note">
