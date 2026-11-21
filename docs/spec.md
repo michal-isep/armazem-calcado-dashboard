@@ -34,17 +34,21 @@ Common rules: all indicators are computed in the backend/database, respond to th
 | X3 | Picks and units by aisle (first letter of `locations`), also by ABC class via `reference` | Picking_Wave | Shows concentration of work (Q3). **Effort = number of picks** (rows of Picking_Wave); units shown as secondary. |
 | X4 | Agreement between computed ABC and `Product.ABCCOD` | Customer_Order + Product | Tells whether the supplied classes are still valid. We do not know how `ABCCOD` was produced, and the response says so. Compares the computed class (M1, date range only) with `ABCCOD` per product; the match percentage is over products that have a computed class. Products with no valid order line in the range are reported as not ranked, neither match nor mismatch. |
 | A1 | Aisle share of picks (**proxy, not Sector**) | Picking_Wave | Picks per aisle / total picks. Rare aisles (C, E, Z, G) stay in their own bucket; their meaning is unknown. |
+| X6 | Wave size distribution and waves per split order | Customer_Order | Number of waves carrying 1, 2-3, 4-5, 6-10 and more than 10 distinct orders, and the number of split orders spread over 2, 3 and 4 or more waves. The average M3 hides this spread. |
+| X7 | Picks by shelf position (**proxy, not distance**) | Picking_Wave + Storage_Location | Picks and units by band along the y axis and by shelf level z, split by ABC class, for picks with coordinates only (ADR 0008, 0010). |
+| X8 | Location coverage | Picking_Wave + Storage_Location | Picks and units at locations with and without coordinates, and the codes without coordinates that carry most picks (`RC-01`, ADR 0009). |
 
 ### Deferred (not dropped)
 - **X5** Units per wave and per operator (workload balance). May return as an operator filter, not an indicator.
 - **A2** (multi-aisle orders) is **dropped**: Picking_Wave has no `orderNumber`, so picks cannot be tied to orders. A wave-level substitute was rejected because it could be read as an order metric.
-- Layout files (Class_Based, Dedicated, Hybrid, Random storage), `Storage_Location` coordinates and `Support_Points_Navigation` are not loaded in this version. Future work.
+- Layout files (Class_Based, Dedicated, Hybrid, Random storage) and `Support_Points_Navigation` are not loaded (ADR 0008). `Storage_Location` coordinates are loaded and used by X7 and X8.
 
 ## 3. Known limitations (must appear in the UI)
 - **M4 and M5 are degenerate:** every product has Sector `PF`, so M4 is 100% and M5 is 0%. They stay as KPI cards on the Overview with a "not informative: all products are PF" badge and a link to A1. **No substitute exists for multi-sector orders**; A1 is labelled a proxy and is never called Sector.
 - **Two ABC sources:** the dashboard uses the computed ABC (M1) and shows `Product.ABCCOD` for comparison (X4).
 - The data covers 2023-01-05 to 2023-10-19 only. January and October are partial months and are marked as such.
 - **The two order/wave files do not reconcile and we do not reconcile them.** 77 waves in Customer_Order are missing from Picking_Wave; Picking_Wave has 13,003 fewer units (about 94% coverage of ordered units). Neither file is declared right. Aisle shares are therefore approximate; the Warehouse zones page shows a permanent note.
+- **Part of the picks cannot be placed in the layout.** 23,609 picks (11.0%) are at codes with no coordinates; 22,979 of them (10.7% of all picks) are at `RC-01`, which is why aisle R looks busy. They are reported as their own group (ADR 0009). The position view is a proxy and shows no distance to the dock, because the files do not say where it is (ADR 0010).
 - **Picking_Wave has no `orderNumber`.** Picks link to waves and references, not to orders. Only Customer_Order links orders to waves.
 
 ## 4. Data handling rules
@@ -73,8 +77,8 @@ Common rules: all indicators are computed in the backend/database, respond to th
 Maximum: main page plus three subpages, as in the brief.
 1. **Overview (main):** M1-M5 as KPI cards, filters, monthly trend, and a collapsible **data quality panel** (excluded rows, duplicates toggle, source-disagreement note).
 2. **Products (ABC):** Pareto chart, basis switch (lines/units), adjustable thresholds, drill-down by class, X4 comparison.
-3. **Waves and orders:** M3, X1, X2, wave detail (drill-through).
-4. **Warehouse zones (required):** X3 and A1 by aisle and by ABC class, labelled proxy, with the coverage note.
+3. **Waves and orders:** M3, X1, X2, X6, wave detail (drill-through).
+4. **Warehouse zones (required):** X3 and A1 by aisle and by ABC class, labelled proxy, with the coverage note; X8 location coverage and X7 shelf position.
 
 ## 7. Technical rules
 - Browser -> Next.js -> NestJS -> PostgreSQL. The browser never reads CSVs or connects to the database.

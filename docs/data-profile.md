@@ -58,6 +58,12 @@ Nobody has explained them (nobody was asked; decided 2026-11-19, spec section 9)
 
 Meaning not documented. They stay in their own bucket (spec, A1).
 
+## Locations and coordinates (checked on the original CSVs)
+- `Storage_Location.csv` has 2,292 locations; x runs 86 to 666, y 0 to 1,440, z (level) 1 to 4. Aisles A to R; aisle R has only 48 locations.
+- 191,583 of 215,192 picks (89.0%) are at a location in that file. The other 23,609 (11.0%) are not, and have no coordinates in any file.
+- 22,979 picks (10.7% of all picks) are at `RC-01`, then `RC-04` (361), `RC-05` (100) and `RC-03` (19). They are named like the navigation points (`LC-`, `CC-`, `RC-`), not like shelves. Aisle R has 25,925 picks (12.0%), but only about 1.4% of all picks are on real R shelves. What `RC-01` is has not been explained.
+- `Support_Points_Navigation.csv` has 44 points: `LC-01` to `LC-17`, `CC-01` to `CC-17` and `RC-08` to `RC-17`. `RC-01` to `RC-07` are missing, so it cannot place the picks above (ADR 0008, 0009).
+
 ## Consequences for the indicators
 1. **Sector share and multi-sector orders cannot distinguish anything**: 100% of units are `PF`, and 0% of orders are multi-sector.
    The dashboard must show this honestly and offer a clearly labelled proxy (picking aisle/zone) as a separate, additional view.

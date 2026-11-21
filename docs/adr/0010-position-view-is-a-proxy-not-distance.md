@@ -1,0 +1,3 @@
+# The position view shows bands and levels, not distance to the dock
+
+The files do not say where the dock or packing area is, or what unit the coordinates use. Any "distance a picker walks" would rest on a guess, and the brief says not to present estimates as measurements. So the position view shows two things that need no guess: picks by band along the y axis (the long side of the layout, 0 to 1,440) and picks by shelf level z (1 to 4), each split by ABC class. They are labelled as proxies and never as distance or travel. They show whether class A picks sit in a few bands or levels or are spread out, which is the evidence a relocation test needs. If the dock position is confirmed, a distance view can be added without changing these two.
