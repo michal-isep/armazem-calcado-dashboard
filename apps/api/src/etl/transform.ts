@@ -24,6 +24,13 @@ export interface Pick {
   operator: string;
 }
 
+export interface StorageLocationRow {
+  location: string;
+  x: number;
+  y: number;
+  z: number;
+}
+
 export interface ProductRow {
   reference: string;
   abccod: string;
@@ -96,6 +103,26 @@ export function toPick(row: Raw): Pick {
     location,
     aisle: aisleOf(location),
     operator: col(row, 'operator'),
+  };
+}
+
+function parseCoordinate(name: string, text: string): number {
+  if (!/^-?\d+(\.\d+)?$/.test(text)) {
+    throw new Error(`Bad ${name} "${text}", expected a number`);
+  }
+  return Number(text);
+}
+
+/** One row of Storage_Location.csv (comma-separated). Level z is a whole number. */
+export function toStorageLocation(row: Raw): StorageLocationRow {
+  const z = parseCoordinate('z', col(row, 'z'));
+  if (!Number.isInteger(z))
+    throw new Error(`Bad z "${z}", expected a whole number`);
+  return {
+    location: col(row, 'originalLocation'),
+    x: parseCoordinate('x', col(row, 'x')),
+    y: parseCoordinate('y', col(row, 'y')),
+    z,
   };
 }
 

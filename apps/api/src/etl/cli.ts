@@ -14,6 +14,7 @@ async function main(): Promise<void> {
       customerOrder: resolve(dir, 'Customer_Order.csv'),
       pickingWave: resolve(dir, 'Picking_Wave.csv'),
       product: resolve(dir, 'Product.csv'),
+      storageLocation: resolve(dir, 'Storage_Location.csv'),
     });
     console.log(`ETL done from ${dir}`);
     for (const [metric, value] of Object.entries(s)) {

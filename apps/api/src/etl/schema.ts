@@ -2,7 +2,7 @@
 // The DDL runs inside the load transaction, so a failed run keeps the old data.
 
 export const SCHEMA_SQL = `
-DROP TABLE IF EXISTS customer_order_line, picking_wave_pick, product, etl_run_summary;
+DROP TABLE IF EXISTS customer_order_line, picking_wave_pick, product, storage_location, etl_run_summary;
 
 CREATE TABLE product (
   reference text PRIMARY KEY,
@@ -37,6 +37,15 @@ CREATE TABLE picking_wave_pick (
   location    text    NOT NULL,
   aisle       text    NOT NULL,
   operator    text    NOT NULL
+);
+
+-- Coordinates of the shelf locations (ADR 0008). A pick is placed in the
+-- layout when its location is here; otherwise it has no coordinates (ADR 0009).
+CREATE TABLE storage_location (
+  location text PRIMARY KEY,
+  x        numeric NOT NULL,
+  y        numeric NOT NULL,
+  z        integer NOT NULL
 );
 
 CREATE TABLE etl_run_summary (

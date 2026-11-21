@@ -30,7 +30,7 @@ Follow the steps in order. The dashboard describes the current state of the data
 ### 1. Prerequisites
 - Node 24+ and npm
 - Docker (for the PostgreSQL database)
-- A local copy of the three CSV files (see step 4). They are not in the repository (ADR 0007).
+- A local copy of the four CSV files (see step 4). They are not in the repository (ADR 0007).
 
 ### 2. Environment variables
 Copy `.env.example` to `.env` and fill in the values (`.env` is git-ignored; never commit it). Docker Compose reads `.env` by itself. The API, the ETL and the web app do not, so export the same variables in the shell that starts each of them.
@@ -53,12 +53,13 @@ Copy `.env.example` to `.env` and fill in the values (`.env` is git-ignored; nev
 This starts PostgreSQL 17 and waits until it is healthy. The data is kept in the `pgdata` volume.
 
 ### 4. CSV files
-Put these three files in `data/` (local only, git-ignored, never committed):
+Put these four files in `data/` (local only, git-ignored, never committed):
 - `Customer_Order.csv`
 - `Picking_Wave.csv`
 - `Product.csv`
+- `Storage_Location.csv` (coordinates of the shelf locations, `,`-separated; ADR 0008)
 
-The names must match exactly. The files are `;`-separated. The ETL only reads them and never edits them. The other CSVs that may be in `data/` are not loaded in this version.
+The names must match exactly. All are `;`-separated except `Storage_Location.csv`. The ETL only reads them and never edits them. The other CSVs that may be in `data/` (the four storage-layout files and the navigation points) are not loaded (ADR 0008).
 
 ### 5. ETL
 With `DATABASE_URL` exported:
@@ -67,7 +68,7 @@ With `DATABASE_URL` exported:
 
 To read the CSVs from another folder, set `DATA_DIR` or run `npm run etl -- <folder>`.
 
-The ETL empties and reloads the tables in one transaction, so it is safe to run again: the result is the same each time, and a failed run keeps the previous data. It prints `ETL done from <folder>` and then one line per count: rows per file (`product_rows`, `customer_order_rows`, `picking_wave_rows`), the rows per rule (`customer_order_excluded_quantity_0`, `customer_order_blank_size_unknown`, `customer_order_exact_duplicates_flagged`), valid rows, orders before and after the exclusion, and units per file. Quantity-0 lines are loaded but marked invalid, and exact duplicates are marked and kept. Compare the counts with `docs/data-profile.md`.
+The ETL empties and reloads the tables in one transaction, so it is safe to run again: the result is the same each time, and a failed run keeps the previous data. It prints `ETL done from <folder>` and then one line per count: rows per file (`product_rows`, `customer_order_rows`, `picking_wave_rows`, `storage_location_rows`), the rows per rule (`customer_order_excluded_quantity_0`, `customer_order_blank_size_unknown`, `customer_order_exact_duplicates_flagged`), the picks with and without coordinates (`picks_with_coordinates`, `picks_without_coordinates`), valid rows, orders before and after the exclusion, and units per file. Quantity-0 lines are loaded but marked invalid, and exact duplicates are marked and kept. Compare the counts with `docs/data-profile.md`.
 
 ### 6. API
 With `DATABASE_URL` and `API_PORT` exported:
