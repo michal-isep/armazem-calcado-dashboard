@@ -38,6 +38,8 @@ The script now also loads `Storage_Location.csv` (read again from the CSV, with 
 
 **5,431 checks, 0 differences** (3,647 before, plus X7 1,192, X8 590 and two recounts). X7 and X8 match the script on the full period and in every filtered case, with each class filter and with the duplicates toggle on and off.
 
+**Update: X6 (issue #88).** The script also recounts `GET /indicators/wave-distribution` from the order lines: waves and orders, the five size buckets with their shares, the most common wave sizes in units, and the split orders by number of waves. Total now **6,283 checks, 0 differences** (X6 adds 852).
+
 While writing these checks, one bug of the new code was found and fixed before merging: with the `abcClass` filter the count of picks left out for lack of coordinates covered all classes, not the selected one. An e2e assertion now covers it.
 
 ## Differences

@@ -12,6 +12,7 @@ import { IndicatorsController } from './indicators/indicators.controller.js';
 import { MonthlyTrendService } from './indicators/monthly-trend.service.js';
 import { OrderSizeService } from './indicators/order-size.service.js';
 import { SectorService } from './indicators/sector.service.js';
+import { WaveDistributionService } from './indicators/wave-distribution.service.js';
 import { WaveSplitService } from './indicators/wave-split.service.js';
 import { HealthController } from './health.controller.js';
 import { PositionController } from './position/position.controller.js';
@@ -38,6 +39,7 @@ import { WavesService } from './waves/waves.service.js';
     PositionService,
     OrderSizeService,
     WaveSplitService,
+    WaveDistributionService,
     SectorService,
     MonthlyTrendService,
     DataQualityService,

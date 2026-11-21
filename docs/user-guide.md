@@ -91,6 +91,7 @@ ABC is computed on the **date range only** with the active basis and thresholds.
 ## 6. Waves and orders page
 - **M3, X1, X2 cards:** average orders per wave (4.07), lines per order (3.75), and the share of orders split across more than one wave (**12.3%**, 4,023 of 32,632 orders), each with the previous-period comparison.
 - **Monthly trend:** M3, X1, X2 by month with the same tooltip. A line lists the partial months: *Jan 2023 (27 of 31 days), Oct 2023 (19 of 31 days)*.
+- **X6 Wave size distribution:** the spread behind M3. Waves are grouped by the number of distinct orders they carry (1, 2 to 3, 4 to 5, 6 to 10, more than 10), with the share of waves and the share of **order placements** (an order split across waves counts once in each). On the real data 38.3% of waves (3,751) carry a single order but only 9.4% of order placements; waves of 6 or more orders are 28.0% of waves and carry about 63% of placements. A second table lists the **most common wave sizes in units**: 74.3% of waves (7,274) have exactly 24 units, then 25 (8.5%), 28, 27 and 26. A third table splits the **split orders** (X2: 4,023 of 32,632, 12.3%) by how many waves they are spread over: 2 waves 78.8%, 3 waves 10.6%, 4 or more 10.6%. It does not say why waves are built this way.
 - **Waves list:** the number of waves that match ("9,784 waves match. Showing 1 to 50; page 1 of 196"), with columns **Wave, Orders, Lines, Units, Orders created (first to last)**. Click the **Wave** or **Orders created** heading to sort (an arrow shows the direction; click again to reverse). Use **Previous** and **Next** to page. A page past the end says so. The list uses Customer_Order only; picks are not shown here because they cannot be tied to orders.
 
 ### Drill-through: the wave detail view
@@ -137,6 +138,7 @@ A permanent note at the top: Picking_Wave covers about **94%** of ordered units;
 | See how concentrated demand is | Products: look at the Pareto chart; click Class A, then a product. |
 | Check if the supplied ABC classes are still valid | Products: read the X4 match (58.2%). |
 | See whether orders are split across waves | Waves and orders: read X2 and the trend. |
+| See whether waves are small or large, in orders and in units | Waves and orders: Wave size distribution (X6). |
 | Understand one wave | Waves and orders: click the wave number. |
 | Find the busiest aisles | Warehouse zones: read the share of picks, and the note about aisle R. |
 | See where class A products are picked in the layout | Warehouse zones: Picks by shelf position, the class A column by band and level. |

@@ -25,6 +25,7 @@ Different files use different separators. The ETL must handle each one explicitl
   Picking_Wave also repeats identical single-unit rows, so these are probably real repeated lines, not errors.
   They are kept (see spec, data handling).
 - 4,024 orders (12.3%) appear in more than one wave: an order can be split across waves.
+- Waves are not all different in size: 7,274 of 9,784 waves (74.3%) have exactly 24 units on valid lines; the next sizes are 25 (834 waves), 28 (130), 27 (102) and 26 (101); the range is 1 to 192 units. This looks like waves filled to a fixed number of units, but the data does not say so. Also, 3,751 waves (38.3%) carry a single order and 683 (7.0%) carry more than 10.
 - Size codes mix scales (for example 9, 105, 215, 270). Meaning not documented; treat as an opaque label.
 
 ## Product.csv
