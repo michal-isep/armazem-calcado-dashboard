@@ -371,3 +371,53 @@ export interface AislePicks {
 
 export const getAislePicks = (query: string) =>
   get<AislePicks & { filters: FilterReport }>('/indicators/aisle-picks', query);
+
+// Warehouse zones page (X7 shelf position, X8 location coverage; issue #87).
+// Mirrors apps/api/src/position/. Position is a proxy, not a distance
+// (ADR 0010); picks without coordinates are their own group (ADR 0009).
+export interface PositionEntry extends PickCount {
+  sharePercent: number | null;
+  byClass: Record<PickClass, PickCount>;
+}
+
+export interface ShelfPosition {
+  source: string;
+  label: string;
+  note: string;
+  picksWithoutCoordinatesLeftOut: number;
+  abc: { basis: 'lines' | 'units'; thresholds: { a: number; b: number } };
+  totals: PickCount;
+  bands: (PositionEntry & { band: number; yFrom: number; yTo: number })[];
+  levels: (PositionEntry & { level: number })[];
+}
+
+export interface LocationCoverage {
+  source: string;
+  note: string;
+  totals: PickCount;
+  withCoordinates: PickCount & { sharePercent: number | null };
+  withoutCoordinates: PickCount & { sharePercent: number | null };
+  topWithoutCoordinates: (PickCount & {
+    location: string;
+    aisle: string;
+    sharePercent: number | null;
+  })[];
+  aislesAffected: {
+    aisle: string;
+    picks: number;
+    picksWithoutCoordinates: number;
+    sharePercentWithout: number | null;
+  }[];
+}
+
+export const getShelfPosition = (query: string) =>
+  get<ShelfPosition & { filters: FilterReport }>(
+    '/indicators/shelf-position',
+    query,
+  );
+
+export const getLocationCoverage = (query: string) =>
+  get<LocationCoverage & { filters: FilterReport }>(
+    '/indicators/location-coverage',
+    query,
+  );

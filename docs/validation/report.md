@@ -33,6 +33,13 @@ M1 (rank, class, lines, units, share, cumulative share for every selected refere
 
 Real-data anchors that agree with the spec: M2 = 228,195 / 32,632 = 6.993; M3 = 4.073; X1 = 3.749; X2 = 12.33% (4,023 of 32,632 orders); lines basis 49/53/106 with 121 of 208 matching `ABCCOD`; units basis 51/49/108 with 112 of 208.
 
+## Update: X7 and X8 (issue #87)
+The script now also loads `Storage_Location.csv` (read again from the CSV, with its own rule for the band: floor(y / 240), the last band closed) and checks `GET /indicators/shelf-position` (X7) and `GET /indicators/location-coverage` (X8) in all 20 scenarios. It also recounts two facts: 191,583 picks with coordinates and 22,979 picks at `RC-01`.
+
+**5,431 checks, 0 differences** (3,647 before, plus X7 1,192, X8 590 and two recounts). X7 and X8 match the script on the full period and in every filtered case, with each class filter and with the duplicates toggle on and off.
+
+While writing these checks, one bug of the new code was found and fixed before merging: with the `abcClass` filter the count of picks left out for lack of coordinates covered all classes, not the selected one. An e2e assertion now covers it.
+
 ## Differences
 None in the indicator values. One point where the first version of the script disagreed with the API, and the script was wrong:
 - For a date range outside the data (S19), the monthly trend returns no months. The script first expected one empty month per calendar month of the range. The API lists only months inside the data range, which is how it is documented, so the script was changed.

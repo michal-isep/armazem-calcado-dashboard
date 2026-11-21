@@ -391,6 +391,15 @@ a {
   font-weight: 700;
 }
 
+.share-bar {
+  display: inline-block;
+  height: 0.7rem;
+  min-width: 1px;
+  background: currentColor;
+  opacity: 0.55;
+  vertical-align: middle;
+}
+
 .scroll {
   max-height: 22rem;
   overflow: auto;

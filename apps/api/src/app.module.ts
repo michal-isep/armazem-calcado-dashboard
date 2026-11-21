@@ -14,6 +14,8 @@ import { OrderSizeService } from './indicators/order-size.service.js';
 import { SectorService } from './indicators/sector.service.js';
 import { WaveSplitService } from './indicators/wave-split.service.js';
 import { HealthController } from './health.controller.js';
+import { PositionController } from './position/position.controller.js';
+import { PositionService } from './position/position.service.js';
 import { WavesController } from './waves/waves.controller.js';
 import { WavesService } from './waves/waves.service.js';
 
@@ -24,6 +26,7 @@ import { WavesService } from './waves/waves.service.js';
     IndicatorsController,
     AbcController,
     AisleController,
+    PositionController,
     WavesController,
   ],
   providers: [
@@ -32,6 +35,7 @@ import { WavesService } from './waves/waves.service.js';
     AbcComparisonService,
     AbcSizesService,
     AisleService,
+    PositionService,
     OrderSizeService,
     WaveSplitService,
     SectorService,
