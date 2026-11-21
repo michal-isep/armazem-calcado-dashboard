@@ -29,11 +29,16 @@ describe.skipIf(!url)('ETL (fixture from spec section 8)', () => {
     const pr = 'Reference;ABCCOD;Sector\r\nA;A;PF      \r\nB;B;PF      \r\n';
     writeFileSync(join(dir, 'co.csv'), co);
     writeFileSync(join(dir, 'pw.csv'), pw);
+    const sl =
+      '﻿originalLocation,position,x,y,z\r\n' +
+      'H-06-13,"100, 20, 2",100,20,2\r\n';
     writeFileSync(join(dir, 'pr.csv'), pr);
+    writeFileSync(join(dir, 'sl.csv'), sl);
     return {
       customerOrder: join(dir, 'co.csv'),
       pickingWave: join(dir, 'pw.csv'),
       product: join(dir, 'pr.csv'),
+      storageLocation: join(dir, 'sl.csv'),
     };
   }
 
@@ -47,6 +52,9 @@ describe.skipIf(!url)('ETL (fixture from spec section 8)', () => {
     expect(s.orders_after_exclusion).toBe(3);
     expect(s.picking_wave_rows).toBe(2);
     expect(s.product_rows).toBe(2);
+    expect(s.storage_location_rows).toBe(1);
+    expect(s.picks_with_coordinates).toBe(1); // H-06-13
+    expect(s.picks_without_coordinates).toBe(1); // ZN-COR
 
     const { rows } = await pool.query(
       `SELECT sum(quantity)::int AS units FROM customer_order_line WHERE is_valid`,

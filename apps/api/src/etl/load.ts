@@ -9,23 +9,30 @@ import {
   type OrderLine,
   type Pick,
   type ProductRow,
+  type StorageLocationRow,
+  toStorageLocation,
 } from './transform.js';
 
 export interface EtlPaths {
   customerOrder: string;
   pickingWave: string;
   product: string;
+  /** Storage_Location.csv (`,`-separated). Optional so small test fixtures can skip it. */
+  storageLocation?: string;
 }
 
 export type EtlSummary = Record<string, number>;
 
 const BATCH = 5000;
 
-/** Streams a `;`-separated CSV (BOM stripped) as objects keyed by header. */
-async function* readCsv(path: string): AsyncGenerator<Record<string, string>> {
+/** Streams a CSV with the given separator (BOM stripped) as objects keyed by header. */
+async function* readCsv(
+  path: string,
+  delimiter: string,
+): AsyncGenerator<Record<string, string>> {
   const parser = createReadStream(path).pipe(
     parse({
-      delimiter: ';',
+      delimiter,
       columns: true,
       bom: true,
       skip_empty_lines: true,
@@ -56,9 +63,10 @@ async function insertBatches<T>(
 async function* mapRows<T>(
   path: string,
   fn: (row: Record<string, string>) => T,
+  delimiter = ';',
 ): AsyncGenerator<T> {
   let n = 1; // header is line 1
-  for await (const row of readCsv(path)) {
+  for await (const row of readCsv(path, delimiter)) {
     n++;
     try {
       yield fn(row);
@@ -163,6 +171,25 @@ export async function runEtl(
           .then(() => undefined),
     );
 
+    if (paths.storageLocation) {
+      await insertBatches<StorageLocationRow>(
+        mapRows(paths.storageLocation, toStorageLocation, ','),
+        (b) =>
+          client
+            .query(
+              `INSERT INTO storage_location (location, x, y, z)
+               SELECT * FROM unnest($1::text[], $2::numeric[], $3::numeric[], $4::int[])`,
+              [
+                b.map((r) => r.location),
+                b.map((r) => r.x),
+                b.map((r) => r.y),
+                b.map((r) => r.z),
+              ],
+            )
+            .then(() => undefined),
+      );
+    }
+
     await client.query(`
       INSERT INTO etl_run_summary (metric, value)
       SELECT * FROM (VALUES
@@ -184,7 +211,14 @@ export async function runEtl(
            (SELECT coalesce(sum(quantity), 0) FROM customer_order_line)),
         ('picking_wave_rows', (SELECT count(*) FROM picking_wave_pick)),
         ('picking_wave_units',
-           (SELECT coalesce(sum(quantity), 0) FROM picking_wave_pick))
+           (SELECT coalesce(sum(quantity), 0) FROM picking_wave_pick)),
+        ('storage_location_rows', (SELECT count(*) FROM storage_location)),
+        ('picks_with_coordinates',
+           (SELECT count(*) FROM picking_wave_pick p
+             WHERE EXISTS (SELECT 1 FROM storage_location s WHERE s.location = p.location))),
+        ('picks_without_coordinates',
+           (SELECT count(*) FROM picking_wave_pick p
+             WHERE NOT EXISTS (SELECT 1 FROM storage_location s WHERE s.location = p.location)))
       ) AS v(metric, value)`);
 
     const { rows } = await client.query<{ metric: string; value: string }>(
