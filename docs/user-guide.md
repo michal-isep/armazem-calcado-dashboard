@@ -106,6 +106,9 @@ A permanent note at the top: Picking_Wave covers about **94%** of ordered units;
 - **X3 / A1 Picks by aisle:** labelled **Proxy, not Sector: aisle is the first letter of the pick location**. The same **ABC basis** and **Thresholds** controls as the Products page appear here, because each aisle's picks are split by the class of the product picked. Effort is the **number of picks**; units are secondary.
 - **Table:** for each aisle: picks, units, **share of picks** (I is highest with 16.9%; I, R and J together are about 40%), and picks of **class A, class B, class C** and **no class**.
 - **Aisles with unknown meaning:** aisles **C, E, Z, G** (120 picks, 0.1%) are kept in a **separate table** marked *Meaning unknown: the data does not say what locations in these aisles are*. They are not merged, hidden or guessed.
+- **Aisle R note:** when most of a busy aisle's picks are at codes without coordinates, a note appears under the aisle table. On the real data aisle R (12.0% of picks) shows *90.5% of its picks are at codes without coordinates (mostly RC-01), not on a shelf*. So aisle R is not as busy on its shelves as its share suggests (ADR 0009).
+- **X8 Location coverage:** how many picks can be placed in the layout. A pick has **coordinates** when its location is in `Storage_Location`: 191,583 picks (**89.0%**). The other 23,609 (**11.0%**) are at codes with no coordinates in any file. A second table lists those codes: **RC-01 alone has 22,979 picks (10.7% of all picks)**, then RC-04 (361) and RC-05 (100). What `RC-01` is has not been explained. These picks are shown, never dropped or guessed.
+- **X7 Picks by shelf position:** labelled **Proxy, not distance: the files do not say where the dock is**. Only picks with coordinates are shown, and the page says how many were left out. One table groups picks by **band along the y axis** (six bands of 240, from 0 to 1,440) with a small bar and the picks of class A, B and C; a second groups them by **shelf level** (z). On the real data no picks happen in the first two bands (y below 480); the 720 to 960 band holds 41.2% of picks and about half of the class A picks with coordinates (51.3%); the levels are 1 (49.5%) and 2 (50.5%), with one pick on level 3. Read it as *where the picks are in the layout*, not how far a picker walks.
 - **X3 Picks by ABC class:** a summary of picks by class (A 78.2%, B 15.5%, C 6.3%).
 - Use the **Aisle** filter to look at one aisle; the other pages show that it does not apply to order-based figures.
 
@@ -122,6 +125,7 @@ A permanent note at the top: Picking_Wave covers about **94%** of ordered units;
 - **M4 and M5 cannot distinguish anything:** every product is in the same sector (PF). They are shown and marked *Not informative* instead of hidden.
 - **Aisle is a proxy**, not a sector. It is never called Sector.
 - **The two source files do not reconcile.** The dashboard shows which file each number comes from and does not decide which is right.
+- **Part of the picks have no coordinates:** 11.0% of picks (10.7% at `RC-01`) are at codes that are not shelf locations in any file. They are reported, not placed. The position view is a proxy for where picks are in the layout and is not a distance.
 - **No order number in the picking file:** picks cannot be tied to orders, so there is no multi-aisle order indicator.
 - **Partial months** (January and October) are marked.
 - **Duplicates:** kept by default; use the toggle to see the effect of removing them.
@@ -134,7 +138,9 @@ A permanent note at the top: Picking_Wave covers about **94%** of ordered units;
 | Check if the supplied ABC classes are still valid | Products: read the X4 match (58.2%). |
 | See whether orders are split across waves | Waves and orders: read X2 and the trend. |
 | Understand one wave | Waves and orders: click the wave number. |
-| Find the busiest aisles | Warehouse zones: read the share of picks. |
+| Find the busiest aisles | Warehouse zones: read the share of picks, and the note about aisle R. |
+| See where class A products are picked in the layout | Warehouse zones: Picks by shelf position, the class A column by band and level. |
+| Check how much of the picking data can be placed in the layout | Warehouse zones: Location coverage (89.0% with coordinates). |
 | Look at one customer, operator or period | Set the filter in the filter bar; the number of orders behind each card tells you how much data is left. |
 | Share exactly what I see | Copy the page address. |
 | Work in a dark room, or present on a projector | Use the Theme control. |

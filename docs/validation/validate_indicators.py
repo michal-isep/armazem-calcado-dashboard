@@ -66,6 +66,26 @@ def load(data_dir):
     pw["aisle"] = pw["locations"].str[0].str.upper()
     pw = pw.rename(columns={"waveNumber": "wave"})
 
+    # Storage_Location (comma-separated): a pick has coordinates when its
+    # location is listed (ADR 0008, 0009). Band = floor(y / 240), the last
+    # band closed; level = z.
+    sl = pd.read_csv(
+        f"{data_dir}/Storage_Location.csv",
+        sep=",",
+        encoding="utf-8-sig",
+        dtype=str,
+        keep_default_na=False,
+    )
+    sl.columns = [c.strip() for c in sl.columns]
+    sl["location"] = sl["originalLocation"].str.strip()
+    sl["band"] = (sl["y"].astype(float) // 240).clip(upper=5).astype(int)
+    sl["level"] = sl["z"].astype(float).astype(int)
+    sl = sl[["location", "band", "level"]]
+    assert sl["location"].is_unique
+    pw["location"] = pw["locations"]
+    pw = pw.merge(sl, on="location", how="left")
+    pw["has_coord"] = pw["band"].notna()
+
     # wave start = earliest valid order line of the wave (spec/#13 decision)
     wave_start = co[co["valid"]].groupby("wave")["created"].min().dt.date
     pw["wave_day"] = pw["wave"].map(wave_start)
@@ -388,6 +408,76 @@ def check_aisle(rep, s, api, f, pw, rk):
         rep.check(s, "X3", f"class {c} share", (n * 100.0 / total) if total else None, a.get("sharePercent"))
 
 
+def check_position(rep, s, api, f, pw, rk):
+    """X8 location coverage and X7 shelf position (ADR 0009, 0010)."""
+    p = selected_picks(pw, f, rk)
+    total = len(p)
+    cov = api.get("indicators/location-coverage", f)
+    withc = p[p["has_coord"]]
+    without = p[~p["has_coord"]]
+    rep.check(s, "X8", "total picks", total, cov.get("totals", {}).get("picks"))
+    rep.check(s, "X8", "with coordinates picks", len(withc), cov.get("withCoordinates", {}).get("picks"))
+    rep.check(s, "X8", "with coordinates units", int(withc["qty"].sum()), cov.get("withCoordinates", {}).get("units"))
+    rep.check(s, "X8", "without coordinates picks", len(without), cov.get("withoutCoordinates", {}).get("picks"))
+    rep.check(s, "X8", "without coordinates units", int(without["qty"].sum()), cov.get("withoutCoordinates", {}).get("units"))
+    rep.check(
+        s, "X8", "without coordinates share",
+        (len(without) * 100.0 / total) if total else None,
+        cov.get("withoutCoordinates", {}).get("sharePercent"),
+    )
+    g = (
+        without.groupby("location")
+        .agg(picks=("qty", "size"), units=("qty", "sum"))
+        .reset_index()
+        .sort_values(["picks", "location"], ascending=[False, True])
+        .head(10)
+    )
+    api_top = cov.get("topWithoutCoordinates", [])
+    rep.check(s, "X8", "top codes", ",".join(g["location"]), ",".join(x["location"] for x in api_top))
+    for x, (_, row) in zip(api_top, g.iterrows()):
+        rep.check(s, "X8", f"{row['location']} picks", int(row["picks"]), x.get("picks"))
+        rep.check(s, "X8", f"{row['location']} units", int(row["units"]), x.get("units"))
+    aisles = (
+        p.groupby("aisle")
+        .agg(picks=("qty", "size"), nocoord=("has_coord", lambda v: int((~v).sum())))
+        .reset_index()
+    )
+    aisles = aisles[aisles["nocoord"] > 0].sort_values(["nocoord", "aisle"], ascending=[False, True])
+    api_aisles = cov.get("aislesAffected", [])
+    rep.check(s, "X8", "aisles affected", ",".join(aisles["aisle"]), ",".join(x["aisle"] for x in api_aisles))
+    for x, (_, row) in zip(api_aisles, aisles.iterrows()):
+        rep.check(s, "X8", f"aisle {row['aisle']} picks", int(row["picks"]), x.get("picks"))
+        rep.check(s, "X8", f"aisle {row['aisle']} without coordinates", int(row["nocoord"]), x.get("picksWithoutCoordinates"))
+
+    pos = api.get("indicators/shelf-position", f)
+    n = len(withc)
+    rep.check(s, "X7", "total picks", n, pos.get("totals", {}).get("picks"))
+    rep.check(s, "X7", "total units", int(withc["qty"].sum()), pos.get("totals", {}).get("units"))
+    rep.check(s, "X7", "picks left out", len(without), pos.get("picksWithoutCoordinatesLeftOut"))
+    api_bands = {b["band"]: b for b in pos.get("bands", [])}
+    rep.check(s, "X7", "band count", 6, len(api_bands))
+    for b in range(6):
+        sub = withc[withc["band"] == b]
+        a = api_bands.get(b, {})
+        rep.check(s, "X7", f"band {b} picks", len(sub), a.get("picks"))
+        rep.check(s, "X7", f"band {b} units", int(sub["qty"].sum()), a.get("units"))
+        rep.check(s, "X7", f"band {b} share", (len(sub) * 100.0 / n) if n else None, a.get("sharePercent"))
+        for c in ["A", "B", "C", "unclassified"]:
+            k = int((sub["cls"] == c).sum())
+            rep.check(s, "X7", f"band {b} class {c} picks", k, a.get("byClass", {}).get(c, {}).get("picks"))
+    api_levels = {lv["level"]: lv for lv in pos.get("levels", [])}
+    exp_levels = sorted(int(v) for v in withc["level"].unique())
+    rep.check(s, "X7", "level set", ",".join(map(str, exp_levels)), ",".join(map(str, sorted(api_levels))))
+    for lv in exp_levels:
+        sub = withc[withc["level"] == lv]
+        a = api_levels.get(lv, {})
+        rep.check(s, "X7", f"level {lv} picks", len(sub), a.get("picks"))
+        rep.check(s, "X7", f"level {lv} units", int(sub["qty"].sum()), a.get("units"))
+        for c in ["A", "B", "C", "unclassified"]:
+            k = int((sub["cls"] == c).sum())
+            rep.check(s, "X7", f"level {lv} class {c} picks", k, a.get("byClass", {}).get(c, {}).get("picks"))
+
+
 def month_range(first, last):
     y, m = first.year, first.month
     while (y, m) <= (last.year, last.month):
@@ -502,6 +592,8 @@ def main():
         "exact duplicate rows": (int(co["dup"].sum()), 2559),
         "Picking_Wave rows": (len(pw), 215192),
         "Product rows": (len(prod), 208),
+        "Picks with coordinates": (int(pw["has_coord"].sum()), 191583),
+        "Picks at RC-01": (int((pw["location"] == "RC-01").sum()), 22979),
         "Distinct orders (valid)": (co[co["valid"]]["order"].nunique(), 32632),
     }
     rep = Report()
@@ -516,6 +608,7 @@ def main():
         check_abc(rep, name, api, f, co, rk)
         check_x4(rep, name, api, f, co, prod, rk)
         check_aisle(rep, name, api, f, pw, rk)
+        check_position(rep, name, api, f, pw, rk)
         check_monthly(rep, name, api, f, co, rk, sector_of, data_first, data_last)
 
     write_report(rep, scenarios, args.out)
