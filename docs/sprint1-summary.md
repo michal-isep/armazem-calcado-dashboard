@@ -1,9 +1,9 @@
 # Sprint 1 summary
 
-Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-19 (after issues #11, #46, #12, #19, #18, #21, #20, #24, #25, #22, #23, #66, #67 and #68).
+Read this first in a new session. Update it before the session is cleared (CLAUDE.md, working rules). Last updated: 2026-11-21 (after issues #85-#88, location data and wave distribution; earlier: issues #11, #46, #12, #19, #18, #21, #20, #24, #25, #22, #23, #66, #67 and #68).
 
 ## Project in one paragraph
-Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0007`. Data facts: `docs/data-profile.md`.
+Dashboard for the warehouse operations director of a footwear warehouse. The director decides which lever to test first: relocate products or change how picking waves are built. The dashboard describes the current state only; no forecasts or savings. Stack: Next.js, NestJS, PostgreSQL. Spec: `docs/spec.md` (v2). Vocabulary: `docs/GLOSSARY.md`. Decisions: `docs/adr/0001`-`0010`. Data facts: `docs/data-profile.md`.
 
 ## Decisions made (from the spec grilling)
 - ABC ranks by **order lines** by default, units as an alternative; thresholds 80/95, adjustable. ABC is computed on the date range only; other filters select from the computed classes (ADR 0001, 0002).
@@ -279,3 +279,15 @@ The owner is written in each issue body, so these changes only count once the bo
 ## User guide (issue #83)
 - `docs/user-guide.md` explains the dashboard as a guide for its user: the header (theme, navigation, filter bar and each filter), every page and card, the charts, the tooltip, drill-down and drill-through, the data quality panel, the limitations and a table of typical tasks. Linked from `docs/index.md` and the README.
 - Written from the rendered pages of the running dashboard (real data), so labels and numbers match what the user sees (for example 58.2% match on X4, 12.3% split orders, aisle I 16.9%).
+
+## Location data and wave distribution (issues #85, #86, #87, #88)
+Done on 2026-11-21 to give both camps more evidence. Found while checking the unused CSVs against the picks.
+- **Finding:** `Storage_Location` matches 191,583 of 215,192 picks (89.0%). 22,979 picks (10.7% of all picks) are at `RC-01`, which has no coordinates in any file; `Support_Points_Navigation` has only 44 points and stops at `RC-08` (`RC-01` to `RC-07` are missing). Aisle R (25,925 picks, 12.0%) is 90.5% picks without coordinates, so it is not as busy on its shelves as it looks. What `RC-01` is has not been explained.
+- **Finding:** 7,274 of 9,784 waves (74.3%) have exactly 24 units; 38.3% of waves carry a single order but only 9.4% of order placements.
+- **ADRs (#85, PR #89):** 0008 load `Storage_Location` only (the four strategy layout files and the navigation file stay out, with reasons); 0009 picks without coordinates are their own group, A1 and X3 keep the ADR 0006 definition; 0010 the position view uses y bands and level z as proxies, not distance to the dock. Spec sections 2, 3 and 6 and the data profile updated.
+- **ETL (#86, PR #90):** new `storage_location` table; `Storage_Location.csv` is now one of four required files (README step 4). New summary metrics `storage_location_rows`, `picks_with_coordinates`, `picks_without_coordinates`. `storageLocation` is optional in `runEtl` so small fixtures can skip it; the CLI always passes it.
+- **Warehouse zones (#87, PR #91):** `GET /indicators/location-coverage` (X8) and `GET /indicators/shelf-position` (X7), code in `apps/api/src/position/`; two new cards and an aisle R note on the page. Bands: six of 240 along y (0 to 1,440, last closed); levels z. Real data: no picks in bands below y 480, the 720 to 960 band holds 41.2% of picks and 51.3% of class A picks with coordinates.
+- **Waves and orders (#88, PR #92):** `GET /indicators/wave-distribution` (X6): waves by orders carried, most common wave sizes in units, split orders by number of waves. Totals agree with M3 and X2.
+- **Checks:** 135 unit and 102 e2e tests; the validation script now also covers X6, X7 and X8: 6,283 checks, 0 differences (was 3,647). It found one bug before merge (left-out count ignored the class filter). Web: typecheck, lint, build and headless Chrome screenshots of `/zones` and `/waves` on the real data. The new client interactions were not clicked in a real browser (there are none beyond links and the existing ABC controls).
+- **Not done / next:** ask the teacher about `RC-01`, whether the strategy and navigation files are expected, and where the dock is (add to issue #71, nothing was sent). The deliverable PDFs in `docs/deliverables/` still describe three CSVs and ADRs 0001 to 0007 and were not regenerated. `docs/test-plan.md` was not rerun for the new sections. A distance view needs the dock position first (ADR 0010).
+- Tested on a throwaway Postgres 17 container (`happy-pg`, port 5790, trust auth, no `.env`), removed afterwards.
