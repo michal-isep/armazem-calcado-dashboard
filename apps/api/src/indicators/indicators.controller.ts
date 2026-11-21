@@ -13,6 +13,10 @@ import type { SectorIndicators } from './sector.service.js';
 import { SectorService } from './sector.service.js';
 import type { WaveSplitIndicators } from './wave-split.service.js';
 import { WaveSplitService } from './wave-split.service.js';
+import {
+  WaveDistributionService,
+  type WaveDistributionResult,
+} from './wave-distribution.service.js';
 
 // All endpoints take the global filters (src/filters/). abcClass selects the
 // lines of references in that class, ranked on the date range only (ADR 0002)
@@ -23,6 +27,7 @@ export class IndicatorsController {
   constructor(
     private readonly orderSize: OrderSizeService,
     private readonly waveSplit: WaveSplitService,
+    private readonly waveDistribution: WaveDistributionService,
     private readonly sector: SectorService,
     private readonly monthlyTrend: MonthlyTrendService,
     private readonly dataQuality: DataQualityService,
@@ -46,6 +51,16 @@ export class IndicatorsController {
     @QueryAbcParams() abc: AbcParams,
   ): Promise<WaveSplitIndicators> {
     return this.waveSplit.compute(filters, abc);
+  }
+
+  // X6 wave size distribution and waves per split order: the spread behind
+  // M3 and X2, from the same counts.
+  @Get('wave-distribution')
+  getWaveDistribution(
+    @QueryFilters() filters: Filters,
+    @QueryAbcParams() abc: AbcParams,
+  ): Promise<WaveDistributionResult> {
+    return this.waveDistribution.compute(filters, abc);
   }
 
   // M4 sector share and M5 multi-sector orders, with the orders, units and

@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import {
   getMonthlyTrend,
   getOrderSize,
+  getWaveDistribution,
   getWaveList,
   getWaveSplit,
   type MonthIndicators,
@@ -150,11 +151,12 @@ async function WavesAndOrders({
     sort: param(raw.sort),
     order: param(raw.order),
   };
-  const [size, split, trend, list] = await Promise.all([
+  const [size, split, trend, list, dist] = await Promise.all([
     attempt(getOrderSize(filters)),
     attempt(getWaveSplit(filters)),
     attempt(getMonthlyTrend(filters)),
     attempt(getWaveList(filters, paging)),
+    attempt(getWaveDistribution(filters)),
   ]);
   const months = trend.data?.months ?? [];
   const compare = (
@@ -284,6 +286,100 @@ async function WavesAndOrders({
         ) : (
           <ApiProblem what="The monthly trend" error={trend.error} />
         )}
+      </section>
+
+      <section className="card" aria-labelledby="wave-dist-title">
+        <h3 id="wave-dist-title">
+          <span className="kpi-id">X6</span> Wave size distribution
+        </h3>
+        {dist.data ? (
+          dist.data.waves === 0 ? (
+            <p>No orders match the filters.</p>
+          ) : (
+            <>
+              <p className="note">
+                The average (M3,{' '}
+                {formatRatio(split.data?.m3AverageOrdersPerWave ?? null)} orders
+                per wave) hides the spread. {formatInt(dist.data.waves)} waves
+                carry {formatInt(dist.data.waveOrderPairs)} order placements; an
+                order split across waves counts once in each.
+              </p>
+              <table className="data">
+                <caption>Waves by number of distinct orders they carry</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Orders in the wave</th>
+                    <th scope="col">Waves</th>
+                    <th scope="col">Share of waves</th>
+                    <th scope="col">Order placements</th>
+                    <th scope="col">Share of placements</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dist.data.sizes.map((b) => (
+                    <tr key={b.label}>
+                      <th scope="row">{b.label}</th>
+                      <td>{formatInt(b.waves)}</td>
+                      <td>{formatPercent(b.sharePercentOfWaves)}</td>
+                      <td>{formatInt(b.orderPlacements)}</td>
+                      <td>{formatPercent(b.sharePercentOfPlacements)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <table className="data">
+                <caption>
+                  Most common wave sizes in units (a wave has between{' '}
+                  {formatInt(dist.data.unitsPerWave.minUnits ?? 0)} and{' '}
+                  {formatInt(dist.data.unitsPerWave.maxUnits ?? 0)} units)
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Units in the wave</th>
+                    <th scope="col">Waves</th>
+                    <th scope="col">Share of waves</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dist.data.unitsPerWave.topSizes.map((t) => (
+                    <tr key={t.units}>
+                      <th scope="row">{formatInt(t.units)}</th>
+                      <td>{formatInt(t.waves)}</td>
+                      <td>{formatPercent(t.sharePercentOfWaves)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <table className="data">
+                <caption>
+                  Split orders (X2): {formatInt(dist.data.splitOrders.total)} of{' '}
+                  {formatInt(dist.data.orders)} orders (
+                  {formatPercent(dist.data.splitOrders.sharePercentOfOrders)}),
+                  by number of waves they are spread over
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Spread over</th>
+                    <th scope="col">Orders</th>
+                    <th scope="col">Share of split orders</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dist.data.splitOrders.byWaves.map((b) => (
+                    <tr key={b.label}>
+                      <th scope="row">{b.label}</th>
+                      <td>{formatInt(b.orders)}</td>
+                      <td>{formatPercent(b.sharePercentOfSplitOrders)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )
+        ) : (
+          <ApiProblem what="The wave size distribution" error={dist.error} />
+        )}
+        <CardFilters source="customer_order" report={dist.data?.filters} />
       </section>
 
       <section className="card" aria-labelledby="wave-list-title">

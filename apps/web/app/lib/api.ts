@@ -162,6 +162,46 @@ export const getOrderSize = (f: FilterValues) =>
   fetchIndicator<OrderSize>('/indicators/order-size', f);
 export const getWaveSplit = (f: FilterValues) =>
   fetchIndicator<WaveSplit>('/indicators/wave-split', f);
+// Waves and orders page (X6; issue #88). Mirrors WaveDistributionResult in
+// apps/api/src/indicators/. The spread behind M3 and X2.
+export interface WaveSizeBucket {
+  label: string;
+  waves: number;
+  sharePercentOfWaves: number | null;
+  orderPlacements: number;
+  sharePercentOfPlacements: number | null;
+}
+
+export interface SplitBucket {
+  label: string;
+  orders: number;
+  sharePercentOfSplitOrders: number | null;
+}
+
+export interface WaveDistribution {
+  source: 'Customer_Order';
+  waves: number;
+  orders: number;
+  waveOrderPairs: number;
+  sizes: WaveSizeBucket[];
+  unitsPerWave: {
+    minUnits: number | null;
+    maxUnits: number | null;
+    topSizes: {
+      units: number;
+      waves: number;
+      sharePercentOfWaves: number | null;
+    }[];
+  };
+  splitOrders: {
+    total: number;
+    sharePercentOfOrders: number | null;
+    byWaves: SplitBucket[];
+  };
+}
+
+export const getWaveDistribution = (f: FilterValues) =>
+  fetchIndicator<WaveDistribution>('/indicators/wave-distribution', f);
 export const getSector = (f: FilterValues) =>
   fetchIndicator<Sector>('/indicators/sector', f);
 export const getMonthlyTrend = (f: FilterValues) =>

@@ -408,6 +408,55 @@ def check_aisle(rep, s, api, f, pw, rk):
         rep.check(s, "X3", f"class {c} share", (n * 100.0 / total) if total else None, a.get("sharePercent"))
 
 
+SIZE_BUCKETS = [("1 order", 1, 1), ("2 to 3 orders", 2, 3), ("4 to 5 orders", 4, 5),
+                ("6 to 10 orders", 6, 10), ("More than 10 orders", 11, None)]
+SPLIT_BUCKETS = [("2 waves", 2, 2), ("3 waves", 3, 3), ("4 or more waves", 4, None)]
+
+
+def in_bucket(n, lo, hi):
+    return n >= lo and (hi is None or n <= hi)
+
+
+def check_wave_distribution(rep, s, api, f, co, rk):
+    """X6: the spread behind M3 and X2, recounted from the order lines."""
+    b = order_lines(co, f, rk)
+    r = api.get("indicators/wave-distribution", f)
+    per_wave = b.groupby("wave")["order"].nunique()
+    per_order = b.groupby("order")["wave"].nunique()
+    pairs = int(per_wave.sum())
+    rep.check(s, "X6", "waves", len(per_wave), r.get("waves"))
+    rep.check(s, "X6", "orders", len(per_order), r.get("orders"))
+    rep.check(s, "X6", "waveOrderPairs", pairs, r.get("waveOrderPairs"))
+    api_sizes = {x["label"]: x for x in r.get("sizes", [])}
+    for label, lo, hi in SIZE_BUCKETS:
+        sel = per_wave[[in_bucket(n, lo, hi) for n in per_wave]]
+        a = api_sizes.get(label, {})
+        rep.check(s, "X6", f"{label} waves", len(sel), a.get("waves"))
+        rep.check(s, "X6", f"{label} share of waves", (len(sel) * 100.0 / len(per_wave)) if len(per_wave) else None, a.get("sharePercentOfWaves"))
+        rep.check(s, "X6", f"{label} placements", int(sel.sum()), a.get("orderPlacements"))
+        rep.check(s, "X6", f"{label} share of placements", (sel.sum() * 100.0 / pairs) if pairs else None, a.get("sharePercentOfPlacements"))
+    per_units = b.groupby("wave")["qty"].sum()
+    u = r.get("unitsPerWave", {})
+    rep.check(s, "X6", "min units per wave", int(per_units.min()) if len(per_units) else None, u.get("minUnits"))
+    rep.check(s, "X6", "max units per wave", int(per_units.max()) if len(per_units) else None, u.get("maxUnits"))
+    top = per_units.value_counts().rename_axis("units").reset_index(name="waves").sort_values(["waves", "units"], ascending=[False, True]).head(5)
+    api_top = u.get("topSizes", [])
+    rep.check(s, "X6", "top unit sizes", ",".join(str(int(x)) for x in top["units"]), ",".join(str(x["units"]) for x in api_top))
+    for x, (_, row) in zip(api_top, top.iterrows()):
+        rep.check(s, "X6", f"{int(row['units'])} units waves", int(row["waves"]), x.get("waves"))
+        rep.check(s, "X6", f"{int(row['units'])} units share", row["waves"] * 100.0 / len(per_units), x.get("sharePercentOfWaves"))
+    split = per_order[per_order > 1]
+    so = r.get("splitOrders", {})
+    rep.check(s, "X6", "split orders", len(split), so.get("total"))
+    rep.check(s, "X6", "split share of orders", (len(split) * 100.0 / len(per_order)) if len(per_order) else None, so.get("sharePercentOfOrders"))
+    api_split = {x["label"]: x for x in so.get("byWaves", [])}
+    for label, lo, hi in SPLIT_BUCKETS:
+        n = int(sum(1 for v in split if in_bucket(v, lo, hi)))
+        a = api_split.get(label, {})
+        rep.check(s, "X6", f"{label} orders", n, a.get("orders"))
+        rep.check(s, "X6", f"{label} share of split", (n * 100.0 / len(split)) if len(split) else None, a.get("sharePercentOfSplitOrders"))
+
+
 def check_position(rep, s, api, f, pw, rk):
     """X8 location coverage and X7 shelf position (ADR 0009, 0010)."""
     p = selected_picks(pw, f, rk)
@@ -609,6 +658,7 @@ def main():
         check_x4(rep, name, api, f, co, prod, rk)
         check_aisle(rep, name, api, f, pw, rk)
         check_position(rep, name, api, f, pw, rk)
+        check_wave_distribution(rep, name, api, f, co, rk)
         check_monthly(rep, name, api, f, co, rk, sector_of, data_first, data_last)
 
     write_report(rep, scenarios, args.out)
