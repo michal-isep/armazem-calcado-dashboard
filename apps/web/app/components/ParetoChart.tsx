@@ -3,10 +3,14 @@ import { BASIS_LABEL } from '../lib/abc';
 import { formatInt } from '../lib/format';
 
 const W = 720;
-const H = 260;
-const PAD = { left: 44, right: 44, top: 12, bottom: 28 };
+const H = 310;
+const PAD = { left: 58, right: 58, top: 26, bottom: 44 };
 
-export const CLASS_COLOUR = { A: '#2e86c1', B: '#b9770e', C: '#7f8c8d' } as const;
+export const CLASS_COLOUR = {
+  A: '#2e86c1',
+  B: '#b9770e',
+  C: '#7f8c8d',
+} as const;
 
 /**
  * Pareto chart: one bar per reference in rank order (its share of the active
@@ -34,6 +38,26 @@ export function ParetoChart({ abc }: { abc: Abc }) {
   });
   const basisLabel = BASIS_LABEL[abc.basis];
 
+  // Where each class starts and ends along the rank axis, from the rows
+  // themselves (the API assigns the classes; nothing is recomputed here).
+  const bands = (['A', 'B', 'C'] as const)
+    .map((c) => {
+      const idx = rows.flatMap((r, i) => (r.abcClass === c ? [i] : []));
+      if (idx.length === 0) return null;
+      const last = rows[idx[idx.length - 1]];
+      return {
+        c,
+        count: idx.length,
+        x1: PAD.left + step * idx[0],
+        x2: PAD.left + step * (idx[idx.length - 1] + 1),
+        cumulative: Math.min(
+          100,
+          last.cumulativeBeforePercent + last.sharePercent,
+        ),
+      };
+    })
+    .filter((b): b is NonNullable<typeof b> => b !== null);
+
   return (
     <figure className="pareto">
       <figcaption>
@@ -44,6 +68,36 @@ export function ParetoChart({ abc }: { abc: Abc }) {
         role="img"
         aria-label={`Pareto chart of references ranked by ${basisLabel}`}
       >
+        {bands.map((b) => (
+          <g key={b.c}>
+            <rect
+              x={b.x1}
+              y={PAD.top}
+              width={b.x2 - b.x1}
+              height={plotH}
+              fill={CLASS_COLOUR[b.c]}
+              opacity={0.1}
+            />
+            {b.c !== 'A' && (
+              <line
+                className="divider"
+                x1={b.x1}
+                x2={b.x1}
+                y1={PAD.top}
+                y2={PAD.top + plotH}
+              />
+            )}
+            <text
+              className="band-label"
+              x={(b.x1 + b.x2) / 2}
+              y={PAD.top - 8}
+              textAnchor="middle"
+              fill={CLASS_COLOUR[b.c]}
+            >
+              {`${b.c}: ${formatInt(b.count)} products, to ${b.cumulative.toFixed(0)}%`}
+            </text>
+          </g>
+        ))}
         {[0, 25, 50, 75, 100].map((t) => (
           <g key={t}>
             <line
@@ -106,11 +160,33 @@ export function ParetoChart({ abc }: { abc: Abc }) {
             </text>
           </g>
         ))}
-        <text className="tick" x={PAD.left} y={H - 8}>
+        <text className="tick" x={PAD.left} y={PAD.top + plotH + 14}>
           rank 1
         </text>
-        <text className="tick" x={W - PAD.right} y={H - 8} textAnchor="end">
+        <text
+          className="tick"
+          x={W - PAD.right}
+          y={PAD.top + plotH + 14}
+          textAnchor="end"
+        >
           rank {formatInt(rows[rows.length - 1].rank)}
+        </text>
+        <text className="axis-title" x={W / 2} y={H - 6} textAnchor="middle">
+          Products, from most to least ordered
+        </text>
+        <text
+          className="axis-title"
+          transform={`translate(13 ${PAD.top + plotH / 2}) rotate(-90)`}
+          textAnchor="middle"
+        >
+          Share of {basisLabel} per product
+        </text>
+        <text
+          className="axis-title"
+          transform={`translate(${W - 13} ${PAD.top + plotH / 2}) rotate(90)`}
+          textAnchor="middle"
+        >
+          Cumulative share of all {basisLabel}
         </text>
       </svg>
       <p className="legend">
@@ -122,6 +198,11 @@ export function ParetoChart({ abc }: { abc: Abc }) {
         <span>
           <i className="line" /> Cumulative share (right axis)
         </span>
+      </p>
+      <p className="note">
+        How to read: each bar is one product, the most ordered on the left. The
+        line adds the bars up; where it crosses a dashed line the class changes.
+        Hover a bar for its numbers.
       </p>
     </figure>
   );
