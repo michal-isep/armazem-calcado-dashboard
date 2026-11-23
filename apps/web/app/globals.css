@@ -1,6 +1,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --link: #1f6fa8;
+  --surface: #f7f8fa;
+  --line: #d9dde3;
 }
 
 /* Dark follows the system unless the user chose Light (ThemeToggle). */
@@ -8,6 +11,9 @@
   :root:not([data-theme='light']) {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --link: #6cb4ee;
+    --surface: #131519;
+    --line: #2a2e35;
     color-scheme: dark;
   }
 }
@@ -15,6 +21,9 @@
 :root[data-theme='dark'] {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --link: #6cb4ee;
+  --surface: #131519;
+  --line: #2a2e35;
   color-scheme: dark;
 }
 
@@ -38,7 +47,9 @@ body {
   flex-direction: column;
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    system-ui, -apple-system, 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -52,6 +63,23 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Links inside running text must look like links (issue #97); navigation,
+   tables and badges keep their own styles. */
+.kpi-basis a,
+.note a,
+.basis-banner a,
+.card-filters a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.kpi-basis a:hover,
+.note a:hover,
+.basis-banner a:hover {
+  text-decoration-thickness: 2px;
 }
 
 .shell-top {
@@ -133,10 +161,12 @@ a {
 }
 
 .card {
-  border: 1px solid #8884;
-  border-radius: 6px;
-  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
   margin-top: 1rem;
+  background: var(--surface);
+  box-shadow: 0 1px 2px #0000000f;
 }
 
 .card-filters {
@@ -395,7 +425,23 @@ a {
 .data th,
 .data td {
   text-align: left;
-  padding: 0.2rem 1.25rem 0.2rem 0;
+  padding: 0.3rem 1.25rem 0.3rem 0.5rem;
+}
+
+.data th {
+  border-bottom: 1px solid var(--line);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.85;
+}
+
+.data tbody tr:nth-child(even) {
+  background: #8881;
+}
+
+.data tbody tr:hover {
+  background: #8882;
 }
 
 .data a {
